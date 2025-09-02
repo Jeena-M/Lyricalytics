@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WordCloudController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.controllers</a> &gt; <span class="el_source">WordCloudController.java</span></div><h1>WordCloudController.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.controllers;
+
+
+import edu.usc.csci310.project.models.Artist;
+import edu.usc.csci310.project.models.Song;
+import edu.usc.csci310.project.models.SongFrequency;
+import edu.usc.csci310.project.models.WordFrequency;
+import edu.usc.csci310.project.requests.*;
+import edu.usc.csci310.project.services.WordCloudService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/wordcloud&quot;)
+public class WordCloudController {
+    private final WordCloudService wordCloudService;
+
+<span class="fc" id="L24">    public WordCloudController(WordCloudService wordCloudService) {</span>
+<span class="fc" id="L25">        this.wordCloudService = wordCloudService;</span>
+<span class="fc" id="L26">    }</span>
+
+    //word_table -- returns words in wordcloud + word frequency
+    //song_table -- for a given word returns songs with that word + its frequency in the lyrics
+    //details -- returns song's artist, year, lyrics
+   @PostMapping(&quot;/generate&quot;)
+   public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; generateWordCloud(@RequestBody WordCloudGenerateRequest request) {
+       try {
+<span class="fc bfc" id="L34" title="All 4 branches covered.">           if (request.getArtistName() == null || request.getArtistName().isEmpty()) {</span>
+
+<span class="fc" id="L36">               return ResponseEntity</span>
+<span class="fc" id="L37">                       .status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L38">                       .header(&quot;X-Error-Message&quot;, &quot;Artist name cannot be empty.&quot;)</span>
+<span class="fc" id="L39">                       .body(null);</span>
+           }
+<span class="fc" id="L41">            System.out.println(request.getUsername());</span>
+<span class="fc" id="L42">            List&lt;WordFrequency&gt; wordFrequencies = wordCloudService.generateWordCloud(request.getArtistName(), request.getSongCount(), request.getUsername());</span>
+<span class="fc" id="L43">           return ResponseEntity.ok(wordFrequencies);</span>
+<span class="fc" id="L44">       } catch (Exception e) {</span>
+<span class="fc" id="L45">           e.printStackTrace();</span>
+<span class="fc" id="L46">           return ResponseEntity</span>
+<span class="fc" id="L47">                   .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L48">                   .header(&quot;X-Error-Message&quot;, &quot;Error creating word count data: &quot; + e.getMessage())</span>
+<span class="fc" id="L49">                   .body(null);</span>
+       }
+   }
+
+    @PostMapping(&quot;/generateNoNumber&quot;)
+    public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; generateWordCloudNoNumber(@RequestBody WordCloudNoNumberGenerateRequest request) {
+        try {
+<span class="fc bfc" id="L56" title="All 4 branches covered.">            if (request.getArtistName() == null || request.getArtistName().isEmpty()) {</span>
+
+<span class="fc" id="L58">                return ResponseEntity</span>
+<span class="fc" id="L59">                        .status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L60">                        .header(&quot;X-Error-Message&quot;, &quot;Artist name cannot be empty.&quot;)</span>
+<span class="fc" id="L61">                        .body(null);</span>
+            }
+
+<span class="fc" id="L64">            List&lt;WordFrequency&gt; wordFrequencies = wordCloudService.generateWordCloudNoNumber(request.getArtistName(), request.getUsername());</span>
+<span class="fc" id="L65">            return ResponseEntity.ok(wordFrequencies);</span>
+<span class="fc" id="L66">        } catch (Exception e) {</span>
+<span class="fc" id="L67">            e.printStackTrace();</span>
+<span class="fc" id="L68">            return ResponseEntity</span>
+<span class="fc" id="L69">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L70">                    .header(&quot;X-Error-Message&quot;, &quot;Error creating word count data: &quot; + e.getMessage())</span>
+<span class="fc" id="L71">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/songFrequencyForWordInLyrics&quot;)
+    public ResponseEntity&lt;List&lt;SongFrequency&gt;&gt; getSongFrequencyForWordInLyrics(@RequestBody SongFrequencyRequest request) throws Exception {
+        try {
+<span class="fc" id="L78">            List&lt;SongFrequency&gt; songFrequencies = wordCloudService.getSongFrequencyInLyrics(request.getWord(), request.getArtistName(), request.getSongCount(), request.getUsername());</span>
+<span class="fc" id="L79">            return ResponseEntity.ok(songFrequencies);</span>
+<span class="fc" id="L80">        } catch (Exception e) {</span>
+<span class="fc" id="L81">            e.printStackTrace();</span>
+<span class="fc" id="L82">            return ResponseEntity</span>
+<span class="fc" id="L83">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L84">                    .header(&quot;X-Error-Message&quot;, &quot;Error creating song count data: &quot; + e.getMessage())</span>
+<span class="fc" id="L85">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/songFrequencyForWordInLyricsNoNumber&quot;)
+    public ResponseEntity&lt;List&lt;SongFrequency&gt;&gt; getSongFrequencyForWordInLyricsNoNumber(@RequestBody SongFrequencyRequest request) throws Exception {
+        try {
+<span class="fc" id="L92">            List&lt;SongFrequency&gt; songFrequencies = wordCloudService.getSongFrequencyInLyricsNoCount(request.getWord(), request.getArtistName(), request.getSongCount(), request.getUsername());</span>
+<span class="fc" id="L93">            return ResponseEntity.ok(songFrequencies);</span>
+<span class="fc" id="L94">        } catch (Exception e) {</span>
+<span class="fc" id="L95">            e.printStackTrace();</span>
+<span class="fc" id="L96">            return ResponseEntity</span>
+<span class="fc" id="L97">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L98">                    .header(&quot;X-Error-Message&quot;, &quot;Error creating song count data: &quot; + e.getMessage())</span>
+<span class="fc" id="L99">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/songDetails&quot;)
+    public ResponseEntity&lt;Song&gt; getSongDetails(@RequestBody SongDetailRequest request) throws Exception {
+<span class="fc" id="L105">        Song song = wordCloudService.getSongDetails(request.getSongName(), request.getArtistName(), request.getUsername());</span>
+<span class="fc" id="L106">        return ResponseEntity.ok(song);</span>
+    }
+
+    @PostMapping(&quot;/songDetailsFavorites&quot;)
+    public ResponseEntity&lt;Song&gt; getSongDetailsFavorites(@RequestBody SongDetailsFavorites request) throws Exception {
+<span class="fc" id="L111">        Song song = wordCloudService.getSongDetailsFavorites(request.getSongName(), request.getArtistName());</span>
+<span class="fc" id="L112">        return ResponseEntity.ok(song);</span>
+    }
+
+    @PostMapping(&quot;/artists&quot;)
+    public ResponseEntity&lt;List&lt;Artist&gt;&gt; getAmbiguousArtists(@RequestBody ArtistsRequest request) throws Exception {
+<span class="fc" id="L117">        List&lt;Artist&gt; artists = wordCloudService.getAmbiguousArtists(request.getArtistName());</span>
+<span class="fc" id="L118">        return ResponseEntity.ok(artists);</span>
+    }
+
+    @PostMapping(&quot;/addSong&quot;)
+    public ResponseEntity&lt;List&lt;String&gt;&gt; getSongsForArtist(@RequestBody ArtistsRequest request) throws Exception {
+<span class="fc" id="L123">        List&lt;String&gt; songs = wordCloudService.getSongsForArtist(request.getArtistName());</span>
+<span class="fc" id="L124">        return ResponseEntity.ok(songs);</span>
+    }
+
+    @PostMapping(&quot;/generateFromList&quot;)
+    public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; generateWordCloudFromList(@RequestBody WordCloudFromListGenerateRequest request) {
+        try {
+<span class="fc bfc" id="L130" title="All 4 branches covered.">            if (request.getArtistName() == null || request.getArtistName().isEmpty()) {</span>
+
+<span class="fc" id="L132">                return ResponseEntity</span>
+<span class="fc" id="L133">                        .status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L134">                        .header(&quot;X-Error-Message&quot;, &quot;Artist name cannot be empty.&quot;)</span>
+<span class="fc" id="L135">                        .body(null);</span>
+            }
+
+<span class="fc bfc" id="L138" title="All 4 branches covered.">            if(request.getSongs() == null || request.getSongs().isEmpty()){</span>
+<span class="fc" id="L139">                return ResponseEntity</span>
+<span class="fc" id="L140">                        .status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L141">                        .header(&quot;X-Error-Message&quot;, &quot;No songs selected.&quot;)</span>
+<span class="fc" id="L142">                        .body(null);</span>
+            }
+
+<span class="fc" id="L145">            List&lt;WordFrequency&gt; wordFrequencies = wordCloudService.generateWordCloudFromSongList(request.getArtistName(), request.getSongs(), request.getUsername());</span>
+<span class="fc" id="L146">            return ResponseEntity.ok(wordFrequencies);</span>
+<span class="fc" id="L147">        } catch (Exception e) {</span>
+<span class="fc" id="L148">            e.printStackTrace();</span>
+<span class="fc" id="L149">            return ResponseEntity</span>
+<span class="fc" id="L150">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L151">                    .header(&quot;X-Error-Message&quot;, &quot;Error creating word count data: &quot; + e.getMessage())</span>
+<span class="fc" id="L152">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/updateExistingWordCloudFromList&quot;)
+    public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; updateExistingWordCloudWithList (@RequestBody UpdateWordCloudFromSongList request){
+        try {
+<span class="fc" id="L159">            List&lt;WordFrequency&gt; newWordCloud = wordCloudService.updateWordCloudFromSongList(request.getArtist(), request.getSongs(), request.getUsername(), request.getWordCloudJson());</span>
+<span class="fc" id="L160">            return ResponseEntity.ok(newWordCloud);</span>
+<span class="fc" id="L161">        } catch (Exception e) {</span>
+<span class="fc" id="L162">            e.printStackTrace();</span>
+<span class="fc" id="L163">            return ResponseEntity</span>
+<span class="fc" id="L164">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L165">                    .header(&quot;X-Error-Message&quot;, &quot;Error updating word count data based on favorites: &quot; + e.getMessage())</span>
+<span class="fc" id="L166">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/updateExistingWordCloudWithSearchSongCount&quot;)
+    public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; updateExistingWordCloudSearchSongCount (@RequestBody UpdateExistingWordCloudWithSearchWithSongCount request){
+        try {
+<span class="fc" id="L173">            List&lt;WordFrequency&gt; newWordCloud = wordCloudService.updateWordCloudFromSongListWithSongCount(request.getArtist(), request.getSongCount(), request.getUsername(), request.getWordCloudJson());</span>
+<span class="fc" id="L174">            return ResponseEntity.ok(newWordCloud);</span>
+<span class="fc" id="L175">        } catch (Exception e) {</span>
+<span class="fc" id="L176">            e.printStackTrace();</span>
+<span class="fc" id="L177">            return ResponseEntity</span>
+<span class="fc" id="L178">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L179">                    .header(&quot;X-Error-Message&quot;, &quot;Error updating word count data based on favorites: &quot; + e.getMessage())</span>
+<span class="fc" id="L180">                    .body(null);</span>
+        }
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

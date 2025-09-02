@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FavoritesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.controllers</a> &gt; <span class="el_source">FavoritesController.java</span></div><h1>FavoritesController.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.controllers;
+
+import edu.usc.csci310.project.models.Song;
+import edu.usc.csci310.project.models.WordFrequency;
+import edu.usc.csci310.project.requests.*;
+import edu.usc.csci310.project.services.FavoritesService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/api/favorites&quot;)
+public class FavoritesController {
+    private final FavoritesService favoritesService;
+
+<span class="fc" id="L19">    public FavoritesController(FavoritesService favoritesService) {</span>
+<span class="fc" id="L20">        this.favoritesService = favoritesService;</span>
+<span class="fc" id="L21">    }</span>
+
+    @PostMapping(&quot;/generate&quot;)
+    public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; generateWordCloudFromFavorites(@RequestBody FavoritesListSongs request) {
+        try {
+<span class="fc bfc" id="L26" title="All 2 branches covered.">            if (request.getUsername() == null) {</span>
+
+<span class="fc" id="L28">                return ResponseEntity</span>
+<span class="fc" id="L29">                        .status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L30">                        .header(&quot;X-Error-Message&quot;, &quot;Null username.&quot;)</span>
+<span class="fc" id="L31">                        .body(null);</span>
+            }
+
+<span class="fc" id="L34">            List&lt;WordFrequency&gt; wordFrequencies = favoritesService.generateWordCloudFromFavoritesList(request.getUsername());</span>
+<span class="fc" id="L35">            return ResponseEntity.ok(wordFrequencies);</span>
+<span class="fc" id="L36">        } catch (Exception e) {</span>
+<span class="fc" id="L37">            e.printStackTrace();</span>
+<span class="fc" id="L38">            return ResponseEntity</span>
+<span class="fc" id="L39">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L40">                    .header(&quot;X-Error-Message&quot;, &quot;Error creating word count data based on favorites: &quot; + e.getMessage())</span>
+<span class="fc" id="L41">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/getFavoritesSongs&quot;)
+    public ResponseEntity&lt;List&lt;Song&gt;&gt; getFavoritesSongs(@RequestBody FavoritesListSongs request) throws Exception {
+        try {
+<span class="fc" id="L48">            List&lt;Song&gt; songs = favoritesService.getFavoritesForUser(request.getUsername());</span>
+<span class="fc" id="L49">            return ResponseEntity.ok(songs);</span>
+<span class="fc" id="L50">        } catch (Exception e) {</span>
+<span class="fc" id="L51">            e.printStackTrace();</span>
+<span class="fc" id="L52">            return ResponseEntity</span>
+<span class="fc" id="L53">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L54">                    .header(&quot;X-Error-Message&quot;, &quot;Error getting favorites songs data: &quot; + e.getMessage())</span>
+<span class="fc" id="L55">                    .body(null);</span>
+        }
+    }
+
+
+    @PostMapping(&quot;/addSongToFavorites&quot;)
+    public ResponseEntity&lt;String&gt; addSongToFavorites(@RequestBody AddSongToFavorites request) {
+        try {
+<span class="fc" id="L63">            int id = favoritesService.addSongToFavoritesList(request);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            if (id &gt; 0){</span>
+<span class="fc" id="L65">                return ResponseEntity.ok(&quot;Song added with ID: &quot; + id);</span>
+            }
+<span class="fc" id="L67">            return ResponseEntity.ok(&quot;Song not added - duplicate song&quot;);</span>
+<span class="fc" id="L68">        } catch (Exception e) {</span>
+<span class="fc" id="L69">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(&quot;Failed to add song to favorites.&quot;);</span>
+        }
+    }
+
+    @PostMapping(&quot;/deleteAllSongs&quot;)
+    public ResponseEntity&lt;String&gt; deleteAllSongsForUser(@RequestBody FavoritesListSongs request) {
+        try {
+<span class="fc" id="L76">            int deletedCount = favoritesService.deleteFavoritesByUsername(request.getUsername());</span>
+<span class="fc" id="L77">            return ResponseEntity.ok(&quot;Deleted &quot; + deletedCount + &quot; favorite(s) for user: &quot; + request.getUsername());</span>
+<span class="fc" id="L78">        } catch (Exception e) {</span>
+<span class="fc" id="L79">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L80">                    .body(&quot;Failed to delete favorites for user: &quot; + request.getUsername());</span>
+        }
+    }
+
+    @PostMapping(&quot;/deleteOneSong&quot;)
+    public ResponseEntity&lt;String&gt; deleteSongFromFavorites(@RequestBody DeleteSongFromFavorites request) {
+        try {
+<span class="fc" id="L87">            int deletedCount = favoritesService.deleteSongByUsernameAndSong(request.getUsername(), request.getSongName(), request.getArtistName());</span>
+<span class="fc" id="L88">            return ResponseEntity.ok(&quot;Deleted &quot; + deletedCount + &quot; favorite for user: &quot; + request.getUsername());</span>
+<span class="fc" id="L89">        } catch (Exception e) {</span>
+<span class="fc" id="L90">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L91">                    .body(&quot;Failed to delete this song for user: &quot; + request.getUsername());</span>
+        }
+    }
+
+    @PostMapping(&quot;/moveSongUp&quot;)
+    public ResponseEntity&lt;String&gt; moveSongUp(@RequestBody ReOrderSongRequest request){
+        try {
+<span class="fc" id="L98">            favoritesService.moveSongUpInFavoritesList(request.getUsername(), request.getSongName(), request.getArtistName());</span>
+<span class="fc" id="L99">            return ResponseEntity.ok(&quot;Reordered song&quot;);</span>
+<span class="fc" id="L100">        } catch (Exception e) {</span>
+<span class="fc" id="L101">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L102">                    .body(&quot;Failed to reorder song&quot;);</span>
+        }
+    }
+
+    @PostMapping(&quot;/moveSongDown&quot;)
+    public ResponseEntity&lt;String&gt; moveSongDown(@RequestBody ReOrderSongRequest request){
+        try {
+<span class="fc" id="L109">            favoritesService.moveSongDownInFavoritesList(request.getUsername(), request.getSongName(), request.getArtistName());</span>
+<span class="fc" id="L110">            return ResponseEntity.ok(&quot;Reordered song&quot;);</span>
+<span class="fc" id="L111">        } catch (Exception e) {</span>
+<span class="fc" id="L112">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L113">                    .body(&quot;Failed to reorder song&quot;);</span>
+        }
+    }
+
+    @PostMapping(&quot;/updateExistingWordCloudWithFavorites&quot;)
+    public ResponseEntity&lt;List&lt;WordFrequency&gt;&gt; updateExistingWordCloudWithFavorites (@RequestBody UpdateExistingWordCloudRequest request){
+        try {
+<span class="fc" id="L120">            List&lt;WordFrequency&gt; newWordCloud = favoritesService.updateExistingWordCloud(request.getUsername(), request.getWordCloud());</span>
+<span class="fc" id="L121">            return ResponseEntity.ok(newWordCloud);</span>
+<span class="fc" id="L122">        } catch (Exception e) {</span>
+<span class="fc" id="L123">            e.printStackTrace();</span>
+<span class="fc" id="L124">            return ResponseEntity</span>
+<span class="fc" id="L125">                    .status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L126">                    .header(&quot;X-Error-Message&quot;, &quot;Error updating word count data based on favorites: &quot; + e.getMessage())</span>
+<span class="fc" id="L127">                    .body(null);</span>
+        }
+    }
+
+    @PostMapping(&quot;/togglePrivacyMode&quot;)
+    public ResponseEntity&lt;String&gt; togglePrivacy (@RequestBody PrivacyRequest request){
+        try {
+<span class="fc" id="L134">            String result = favoritesService.togglePrivacyMode(request.getPrivacy(), request.getUsername());</span>
+<span class="fc" id="L135">            return ResponseEntity.ok(result);</span>
+<span class="fc" id="L136">        } catch (Exception e) {</span>
+<span class="fc" id="L137">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L138">                    .body(&quot;Failed to toggle privacy mode: &quot; + e.getMessage());</span>
+        }
+    }
+
+    @GetMapping(&quot;/privacy&quot;)
+    public ResponseEntity&lt;Map&lt;String,Boolean&gt;&gt; getPrivacy(@RequestParam String username) {
+        try {
+<span class="fc" id="L145">            boolean isPrivate = favoritesService.getPrivacyMode(username);</span>
+<span class="fc" id="L146">            return ResponseEntity.ok(Map.of(&quot;isPrivate&quot;, isPrivate));</span>
+<span class="fc" id="L147">        } catch (Exception e) {</span>
+<span class="fc" id="L148">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L149">                    .body(Map.of(&quot;isPrivate&quot;, false));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

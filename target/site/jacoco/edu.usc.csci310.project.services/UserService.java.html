@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.services</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.services;
+
+import edu.usc.csci310.project.models.User;
+import edu.usc.csci310.project.requests.CreateAccountRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.sql.*;
+
+@Service
+public class UserService {
+    private final Connection connection;
+    private final PasswordEncoder passwordEncoder;
+
+<span class="fc" id="L16">    public UserService(Connection connection) {</span>
+<span class="fc" id="L17">        this.connection = connection;</span>
+<span class="fc" id="L18">        this.passwordEncoder = new BCryptPasswordEncoder();</span>
+<span class="fc" id="L19">    }</span>
+
+    public int createAccount(CreateAccountRequest request) throws SQLException {
+        // Encrypt the password before storing it
+<span class="fc" id="L23">        String encryptedPassword = passwordEncoder.encode(request.getPassword());</span>
+
+<span class="fc" id="L25">        String sql = &quot;INSERT INTO users (username, password, privacy) VALUES (?, ?, 1)&quot;;</span>
+<span class="fc" id="L26">        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+            // Set parameters for the insert statement
+<span class="fc" id="L28">            stmt.setString(1, request.getUsername());</span>
+<span class="fc" id="L29">            stmt.setString(2, encryptedPassword);  // Store the encrypted password</span>
+
+            // Execute the insert statement
+<span class="fc" id="L32">            int rowsAffected = stmt.executeUpdate();</span>
+
+            // Check if insert was successful
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (rowsAffected &gt; 0) {</span>
+                // SQLite specific: Retrieve the last inserted row ID
+<span class="fc" id="L37">                try (Statement statement = connection.createStatement();</span>
+<span class="fc" id="L38">                     ResultSet rs = statement.executeQuery(&quot;SELECT last_insert_rowid()&quot;)) {</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">                    if (rs.next()) {</span>
+<span class="fc" id="L40">                        return rs.getInt(1); // Return the generated ID</span>
+                    } else {
+<span class="fc" id="L42">                        throw new SQLException(&quot;Failed to retrieve the generated ID.&quot;);</span>
+                    }
+                }
+            } else {
+<span class="fc" id="L46">                throw new SQLException(&quot;No rows affected during the insert.&quot;);</span>
+            }
+<span class="fc" id="L48">        } catch (SQLException e) {</span>
+            // if it's our duplicate‐username error, rethrow with the exact text
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (e.getMessage().contains(&quot;UNIQUE constraint failed&quot;)) {</span>
+<span class="fc" id="L51">                throw new SQLException(&quot;Username already exists&quot;);</span>
+            }
+            // otherwise let it bubble as a 500
+<span class="fc" id="L54">            throw e;</span>
+        }
+    }
+
+    public boolean doesUsernameExist(String username) throws SQLException {
+<span class="fc" id="L59">        String sql = &quot;SELECT * FROM users WHERE username = ?&quot;;</span>
+<span class="fc" id="L60">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L61">            stmt.setString(1, username); // Set the ID parameter in the query</span>
+
+<span class="fc" id="L63">            try (ResultSet rs = stmt.executeQuery()) {</span>
+                // If a user with the given username is found, return true
+<span class="fc" id="L65">                return rs.next();</span>
+            }
+        }
+    }
+
+
+    public boolean correctUsernameAndPassword(String username, String password) throws SQLException {
+<span class="fc" id="L72">        String sql = &quot;SELECT password FROM users WHERE username = ?&quot;;</span>
+<span class="fc" id="L73">        boolean authenticated = false;            // ← result moved outside the inner try</span>
+<span class="fc" id="L74">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L75">            stmt.setString(1, username);</span>
+<span class="fc" id="L76">            try (ResultSet rs = stmt.executeQuery()) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                if (rs.next()) {                  // user found</span>
+<span class="fc" id="L78">                    String stored = rs.getString(&quot;password&quot;);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                    if (stored != null &amp;&amp;</span>
+<span class="fc bfc" id="L80" title="All 6 branches covered.">                            (stored.startsWith(&quot;$2a$&quot;) || stored.startsWith(&quot;$2b$&quot;) || stored.startsWith(&quot;$2y$&quot;))) {</span>
+<span class="fc" id="L81">                        authenticated = passwordEncoder.matches(password, stored);</span>
+                    } else {
+<span class="fc" id="L83">                        authenticated = password.equals(stored);  // plain-text fallback</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L88">        return authenticated;                     // ← falls through the two ‘} }’ lines</span>
+    }
+
+
+    public User getUser(String username) throws SQLException {
+<span class="fc" id="L93">        String sql = &quot;SELECT * FROM users WHERE username = ?&quot;;</span>
+<span class="fc" id="L94">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L95">            stmt.setString(1, username);</span>
+
+<span class="fc" id="L97">            try (ResultSet rs = stmt.executeQuery()) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                if (rs.next()) {</span>
+<span class="fc" id="L99">                    return new User(rs.getInt(&quot;id&quot;), rs.getString(&quot;username&quot;));</span>
+                } else {
+<span class="fc" id="L101">                    throw new SQLException(&quot;User with username &quot; + username + &quot; not found.&quot;);</span>
+                }
+            }
+        }
+    }
+
+    public boolean isAccountLocked(String username) throws SQLException {
+<span class="fc" id="L108">        boolean locked = false;</span>
+<span class="fc" id="L109">        String sql = &quot;SELECT locked_until FROM users WHERE username = ?&quot;;</span>
+<span class="fc" id="L110">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L111">            stmt.setString(1, username);</span>
+<span class="fc" id="L112">            try (ResultSet rs = stmt.executeQuery()) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                if (rs.next()) {</span>
+<span class="fc" id="L114">                    Timestamp lockedUntil = rs.getTimestamp(&quot;locked_until&quot;);</span>
+<span class="fc bfc" id="L115" title="All 4 branches covered.">                    if (lockedUntil != null &amp;&amp; lockedUntil.after(new Timestamp(System.currentTimeMillis()))) {</span>
+<span class="fc" id="L116">                        locked = true;</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L121">        return locked;</span>
+    }
+
+
+    public boolean recordFailedAttempt(String username) throws SQLException {
+<span class="fc" id="L126">        String sql = &quot;SELECT failed_attempts, last_failed_attempt FROM users WHERE username = ?&quot;;</span>
+<span class="fc" id="L127">        int failedAttempts = 0;</span>
+<span class="fc" id="L128">        Timestamp lastFailed = null;</span>
+<span class="fc" id="L129">        Timestamp now = new Timestamp(System.currentTimeMillis());</span>
+
+<span class="fc" id="L131">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L132">            stmt.setString(1, username);</span>
+<span class="fc" id="L133">            try (ResultSet rs = stmt.executeQuery()) {</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">                if (rs.next()) {</span>
+<span class="fc" id="L135">                    failedAttempts = rs.getInt(&quot;failed_attempts&quot;);</span>
+<span class="fc" id="L136">                    lastFailed = rs.getTimestamp(&quot;last_failed_attempt&quot;);</span>
+                }
+            }
+        }
+
+<span class="fc bfc" id="L141" title="All 4 branches covered.">        if (lastFailed == null || (now.getTime() - lastFailed.getTime()) &gt; 60000) {</span>
+<span class="fc" id="L142">            failedAttempts = 1;</span>
+        } else {
+<span class="fc" id="L144">            failedAttempts++;</span>
+        }
+
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (failedAttempts &gt;= 3) {</span>
+<span class="fc" id="L148">            lockAccount(username);</span>
+<span class="fc" id="L149">            return true;</span>
+        } else {
+<span class="fc" id="L151">            String updateSql = &quot;UPDATE users SET failed_attempts = ?, last_failed_attempt = ? WHERE username = ?&quot;;</span>
+<span class="fc" id="L152">            try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {</span>
+<span class="fc" id="L153">                updateStmt.setInt(1, failedAttempts);</span>
+<span class="fc" id="L154">                updateStmt.setTimestamp(2, now);</span>
+<span class="fc" id="L155">                updateStmt.setString(3, username);</span>
+<span class="fc" id="L156">                updateStmt.executeUpdate();</span>
+            }
+<span class="fc" id="L158">            return false;</span>
+        }
+    }
+
+    public void resetFailedAttempts(String username) throws SQLException {
+<span class="fc" id="L163">        String sql = &quot;UPDATE users SET failed_attempts = 0, last_failed_attempt = NULL, locked_until = NULL WHERE username = ?&quot;;</span>
+<span class="fc" id="L164">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L165">            stmt.setString(1, username);</span>
+<span class="fc" id="L166">            stmt.executeUpdate();</span>
+        }
+<span class="fc" id="L168">    }</span>
+
+    public void lockAccount(String username) throws SQLException {
+        //change lockout time based on RE
+<span class="fc" id="L172">        Timestamp lockedUntil = new Timestamp(System.currentTimeMillis() + 30 * 1000);</span>
+<span class="fc" id="L173">        String sql = &quot;UPDATE users SET locked_until = ?, failed_attempts = 0, last_failed_attempt = NULL WHERE username = ?&quot;;</span>
+<span class="fc" id="L174">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L175">            stmt.setTimestamp(1, lockedUntil);</span>
+<span class="fc" id="L176">            stmt.setString(2, username);</span>
+<span class="fc" id="L177">            stmt.executeUpdate();</span>
+        }
+<span class="fc" id="L179">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LyricsProcessing.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.services</a> &gt; <span class="el_source">LyricsProcessing.java</span></div><h1>LyricsProcessing.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.services;
+
+import edu.stanford.nlp.simple.Document;
+import edu.stanford.nlp.simple.Sentence;
+
+import java.util.*;
+
+<span class="fc" id="L8">public class LyricsProcessing {</span>
+
+    //note: includes full nltk stopword list
+<span class="fc" id="L11">    private static final Set&lt;String&gt; STOP_WORDS = new HashSet&lt;&gt;(Arrays.asList(</span>
+            &quot;the&quot;, &quot;a&quot;, &quot;an&quot;, &quot;and&quot;, &quot;or&quot;, &quot;but&quot;, &quot;if&quot;, &quot;while&quot;, &quot;of&quot;, &quot;at&quot;,
+            &quot;by&quot;, &quot;for&quot;, &quot;with&quot;, &quot;about&quot;, &quot;against&quot;, &quot;between&quot;, &quot;into&quot;, &quot;through&quot;,
+            &quot;during&quot;, &quot;before&quot;, &quot;after&quot;, &quot;above&quot;, &quot;below&quot;, &quot;to&quot;, &quot;from&quot;, &quot;up&quot;,
+            &quot;down&quot;, &quot;in&quot;, &quot;out&quot;, &quot;on&quot;, &quot;off&quot;, &quot;over&quot;, &quot;under&quot;, &quot;again&quot;, &quot;further&quot;,
+            &quot;then&quot;, &quot;once&quot;, &quot;here&quot;, &quot;there&quot;, &quot;when&quot;, &quot;where&quot;, &quot;why&quot;, &quot;how&quot;, &quot;all&quot;,
+            &quot;any&quot;, &quot;both&quot;, &quot;each&quot;, &quot;few&quot;, &quot;more&quot;, &quot;most&quot;, &quot;other&quot;, &quot;some&quot;, &quot;such&quot;,
+            &quot;no&quot;, &quot;nor&quot;, &quot;not&quot;, &quot;only&quot;, &quot;own&quot;, &quot;same&quot;, &quot;so&quot;, &quot;than&quot;, &quot;too&quot;, &quot;very&quot;, &quot;mmm&quot;,
+            &quot;yeah&quot;, &quot;um&quot;, &quot;like&quot;, &quot;oh&quot;, &quot;be&quot;, &quot;it&quot;, &quot;ah&quot;, &quot;uh&quot;, &quot;huh&quot;, &quot;really&quot;, &quot;else&quot;, &quot;okay&quot;,
+            &quot;i&quot;, &quot;me&quot;, &quot;my&quot;, &quot;myself&quot;, &quot;we&quot;, &quot;our&quot;, &quot;ours&quot;, &quot;ourselves&quot;, &quot;you&quot;, &quot;your&quot;, &quot;yours&quot;,
+            &quot;yourself&quot;, &quot;yourselves&quot;, &quot;he&quot;, &quot;him&quot;, &quot;his&quot;, &quot;himself&quot;, &quot;she&quot;, &quot;her&quot;, &quot;hers&quot;, &quot;herself&quot;,
+            &quot;it&quot;, &quot;its&quot;, &quot;itself&quot;, &quot;they&quot;, &quot;them&quot;, &quot;their&quot;, &quot;theirs&quot;, &quot;themselves&quot;, &quot;what&quot;, &quot;which&quot;,
+            &quot;who&quot;, &quot;whom&quot;, &quot;this&quot;, &quot;that&quot;, &quot;these&quot;, &quot;those&quot;, &quot;am&quot;, &quot;is&quot;, &quot;are&quot;, &quot;was&quot;, &quot;were&quot;, &quot;be&quot;,
+            &quot;been&quot;, &quot;being&quot;, &quot;have&quot;, &quot;has&quot;, &quot;had&quot;, &quot;having&quot;, &quot;do&quot;, &quot;does&quot;, &quot;did&quot;, &quot;doing&quot;,
+            &quot;a&quot;, &quot;an&quot;, &quot;the&quot;, &quot;and&quot;, &quot;but&quot;, &quot;if&quot;, &quot;or&quot;, &quot;because&quot;, &quot;as&quot;, &quot;until&quot;, &quot;while&quot;,
+            &quot;of&quot;, &quot;at&quot;, &quot;by&quot;, &quot;for&quot;, &quot;with&quot;, &quot;about&quot;, &quot;against&quot;, &quot;between&quot;, &quot;into&quot;, &quot;through&quot;,
+            &quot;during&quot;, &quot;before&quot;, &quot;after&quot;, &quot;above&quot;, &quot;below&quot;, &quot;to&quot;, &quot;from&quot;, &quot;up&quot;, &quot;down&quot;, &quot;in&quot;,
+            &quot;out&quot;, &quot;on&quot;, &quot;off&quot;, &quot;over&quot;, &quot;under&quot;, &quot;again&quot;, &quot;further&quot;, &quot;then&quot;, &quot;once&quot;,
+            &quot;here&quot;, &quot;there&quot;, &quot;when&quot;, &quot;where&quot;, &quot;why&quot;, &quot;how&quot;, &quot;all&quot;, &quot;any&quot;, &quot;both&quot;, &quot;each&quot;, &quot;few&quot;,
+            &quot;more&quot;, &quot;most&quot;, &quot;other&quot;, &quot;some&quot;, &quot;such&quot;, &quot;no&quot;, &quot;nor&quot;, &quot;not&quot;, &quot;only&quot;, &quot;own&quot;, &quot;same&quot;,
+            &quot;so&quot;, &quot;than&quot;, &quot;too&quot;, &quot;very&quot;, &quot;can&quot;, &quot;will&quot;, &quot;just&quot;,
+            &quot;don't&quot;, &quot;should&quot;, &quot;now&quot;, &quot;ooh&quot;
+    ));
+
+
+    public static List&lt;String&gt; processLyrics(String lyrics) {
+        //splits string into sentences and tokens
+<span class="fc" id="L38">        Document doc = new Document(lyrics);</span>
+<span class="fc" id="L39">        List&lt;String&gt; lemmas = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        for (Sentence sentence : doc.sentences()) {</span>
+            //lemmatize
+<span class="fc bfc" id="L43" title="All 2 branches covered.">            for (String lemma : sentence.lemmas()) {</span>
+<span class="fc" id="L44">                String cleanedLemma = lemma.replaceAll(&quot;^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$&quot;, &quot;&quot;);</span>
+<span class="fc" id="L45">                cleanedLemma = cleanedLemma.toLowerCase();</span>
+                //remove filler words and special char
+<span class="fc bfc" id="L47" title="All 2 branches covered.">                if (cleanedLemma.length() &gt; 2 &amp;&amp;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">                        !STOP_WORDS.contains(cleanedLemma) &amp;&amp;</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">                        !cleanedLemma.matches(&quot;.*\\d.*&quot;)) {</span>
+<span class="fc" id="L50">                    lemmas.add(cleanedLemma);</span>
+                }
+<span class="fc" id="L52">            }</span>
+<span class="fc" id="L53">        }</span>
+
+        //unique words only
+//        List&lt;String&gt; uniqueLemmas = lemmas.stream().distinct().collect(Collectors.toList());
+//        return uniqueLemmas;
+<span class="fc" id="L58">        return lemmas;</span>
+    }
+
+    //test string for experimentation - not included in actual repo code
+    //maven command to run main: clean, compile, exec:java
+//    public static void main(String[] args) {
+//        String lyrics = &quot;[Intro: Sydney Sweeney]\n&quot; +
+//                &quot;No, seriously, get your hands off my man\n&quot; +
+//                &quot;\n&quot; +
+//                &quot;[Verse 1]\n&quot; +
+//                &quot;Baby blues, undressin' him\n&quot; +
+//                &quot;Funny how you think that I don't notice it\n&quot; +
+//                &quot;Actin' like we're friends, we're the opposite\n&quot; +
+//                &quot;I know what you are, tryin' so hard\n&quot; +
+//                &quot;Runnin' 'round tryna fuck a star, go\n&quot; +
+//                &quot;\n&quot; +
+//                &quot;[Chorus]\n&quot; +
+//                &quot;Look at the floor or ceilin'\n&quot; +
+//                &quot;Or anyone else you're feelin'\n&quot; +
+//                &quot;Take home whoever walks in\n&quot; +
+//                &quot;Just keep your eyes off him\n&quot; +
+//                &quot;Yes, I'm Miss Possessive\n&quot; +
+//                &quot;Pretty girl, gon' learn your lesson\n&quot; +
+//                &quot;Some fights you never gonna win\n&quot; +
+//                &quot;Just keep your eyes off him\n&quot; +
+//                &quot;\n&quot; +
+//                &quot;[Post-Chorus]\n&quot; +
+//                &quot;Better, better keep your, keep your, keep your, keep your\n&quot; +
+//                &quot;Bettеr, better keep your, keep your, keep your eyеs off\n&quot; +
+//                &quot;Better, better keep your, keep your, keep your, keep your\n&quot; +
+//                &quot;Better, better keep your, keep your, keep your eyes off\n&quot;;
+//
+//        List&lt;String&gt; processedWords = processLyrics(lyrics);
+//        System.out.println(&quot;Processed Words: &quot; + processedWords);
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

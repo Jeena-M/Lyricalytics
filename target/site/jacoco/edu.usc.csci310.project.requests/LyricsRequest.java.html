@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LyricsRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.requests</a> &gt; <span class="el_source">LyricsRequest.java</span></div><h1>LyricsRequest.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.requests;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.usc.csci310.project.responses.LyricsResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+
+@Component
+public class LyricsRequest {
+    private static HttpClient client;
+
+    @Autowired
+<span class="fc" id="L21">    public LyricsRequest(HttpClient client) {</span>
+<span class="fc" id="L22">        this.client = client;</span>
+<span class="fc" id="L23">    }</span>
+
+<span class="fc" id="L25">    public LyricsRequest() {</span>
+<span class="fc" id="L26">        this.client = HttpClient.newHttpClient();</span>
+<span class="fc" id="L27">    }</span>
+
+    public static String getLyricsFromTitleArtist(String title, String artist) throws Exception {
+<span class="fc" id="L30">        title = URLEncoder.encode(title, StandardCharsets.UTF_8)</span>
+<span class="fc" id="L31">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L32">        artist = URLEncoder.encode(artist, StandardCharsets.UTF_8)</span>
+<span class="fc" id="L33">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L34">        HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L35">                .uri(URI.create(&quot;https://api.lyrics.ovh/v1/&quot; + artist + &quot;/&quot; + title))</span>
+<span class="fc" id="L36">                .GET()</span>
+<span class="fc" id="L37">                .build();</span>
+<span class="fc" id="L38">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="fc" id="L39">        System.out.println(&quot;Status Code: &quot; + response.statusCode());</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if(response.statusCode() != HttpStatus.OK.value()) {</span>
+<span class="fc" id="L41">            throw new Exception(response.body());</span>
+        }
+<span class="fc" id="L43">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L44">        LyricsResponse lyricsResponse = mapper.readValue(response.body(), LyricsResponse.class);</span>
+
+<span class="fc" id="L46">        String lyrics = lyricsResponse.getLyrics();</span>
+<span class="fc" id="L47">        System.out.println(lyrics);</span>
+<span class="fc" id="L48">        return lyrics;</span>
+    }
+
+    //main for testing
+//    public static void main(String[] args) throws Exception {
+//        LyricsRequest lyricsRequest = new LyricsRequest(HttpClient.newHttpClient());
+//        lyricsRequest.getLyricsFromTitleArtist(&quot;To Love&quot;, &quot;Suki Waterhouse&quot;);
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

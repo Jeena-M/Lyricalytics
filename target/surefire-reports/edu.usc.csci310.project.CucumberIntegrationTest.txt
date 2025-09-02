@@ -1,0 +1,30 @@
+-------------------------------------------------------------------------------
+Test set: edu.usc.csci310.project.CucumberIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 66, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 635.7 s <<< FAILURE! -- in edu.usc.csci310.project.CucumberIntegrationTest
+Finding lyrical soulmate or enemy.Finding lyrical soulmate or enemy - I successfully find my lyrical enemy -- Time elapsed: 13.09 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for element to be clickable: By.xpath: //button[text()='Find Enemy'] (tried for 10 second(s) with 500 milliseconds interval)
+Build info: version: '4.17.0', revision: 'e52b1be057*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '14.4.1', java.version: '21.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 135.0.7049.116, chrome: {chromedriverVersion: 135.0.7049.114 (63fd8a7d9d0..., userDataDir: /var/folders/tw/djq1qjxx4_v...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:53563}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:53563/devtoo..., se:cdpVersion: 135.0.7049.116, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: f616b98482c5425afcb621326b33de11
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at edu.usc.csci310.project.FavoritesStepDefs.iClickTheButton(FavoritesStepDefs.java:91)
+	at ✽.I click on the "Find Enemy" button(classpath:edu/usc/csci310/project/Match.feature:25)
+
+Creating a new word cloud.Creating a new word cloud - Create a regular word cloud with valid inputs -- Time elapsed: 8.440 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for visibility of element located by By.xpath: /html/body/div/div/main/div/main/div/div[1]/input[1] (tried for 5 second(s) with 500 milliseconds interval)
+Build info: version: '4.17.0', revision: 'e52b1be057*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '14.4.1', java.version: '21.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 135.0.7049.116, chrome: {chromedriverVersion: 135.0.7049.114 (63fd8a7d9d0..., userDataDir: /var/folders/tw/djq1qjxx4_v...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:53591}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:53591/devtoo..., se:cdpVersion: 135.0.7049.116, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: fc535141d8442a6c27ee9fa07d22eee5
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at edu.usc.csci310.project.WordCloudStepDefs.iEnterInTheSearchField(WordCloudStepDefs.java:342)
+	at ✽.I enter "Taylor Swift" in the artist search field(classpath:edu/usc/csci310/project/WordCloud.feature:6)
+

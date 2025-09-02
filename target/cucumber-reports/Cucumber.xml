@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Cucumber" time="632.494" tests="66" skipped="0" failures="2" errors="0">
+<testcase classname="Favorites list" name="I can view my favorite songs" time="12.256">
+<system-out><![CDATA[
+Given I am on the website home page.........................................passed
+And I am logged in and have songs on my favorites list......................passed
+When I click on the "Favorites" button......................................passed
+Then I can see my favorites list............................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="I can delete all the songs from my list" time="6.013">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I click on the "Delete All Favorites" button...........................passed
+And I click on the "Delete" button..........................................passed
+Then I should see no songs on my favorites list.............................passed
+And I should see a message saying "All favorites deleted."..................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="I can cancel deleting all songs" time="5.933">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I click on the "Delete All Favorites" button...........................passed
+And I click on the "Cancel" button..........................................passed
+Then No songs should be deleted from my favorites list......................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="I can delete one song from my favorite songs list" time="6.243">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I hover over the title of song 1.......................................passed
+And I click on the "Delete" button..........................................passed
+Then I should see a message saying "Deleted \"Sorry\" by Justin Bieber".....passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="I can cancel deleting one song from my favorite songs list" time="5.654">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I hover over the title of song 1.......................................passed
+And I click on the "Delete" button..........................................passed
+And I click on the "Cancel" button..........................................passed
+Then Song 1 should not be removed from my favorites list....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Move a song up in the list" time="5.064">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I hover over the title of song 2.......................................passed
+And I click on the "Move Up" button.........................................passed
+Then Song 2 "Love Yourself" should be the first song on my favorites list...passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Move a song down in the list" time="4.92">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I hover over the title of song 1.......................................passed
+And I click on the "Move Down" button.......................................passed
+Then Song 1 "Sorry" should be the second song on my favorites list..........passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Toggle from public to private account" time="4.22">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+And My account is public....................................................passed
+When I click on the "Account Private" button................................passed
+Then My account should be private...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Toggle from private to public account" time="3.959">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I click on the "Account Public" button.................................passed
+Then My account should be public............................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Account starts as private" time="4.036">
+<system-out><![CDATA[
+Given I just made a new account.............................................passed
+And I am on the favorites page..............................................passed
+Then My account should be private...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Clicking on a song title shows song info" time="6.536">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I click on the title of song 1.........................................passed
+Then I should see the song's artist and year................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Favorites list is persistent" time="4.388">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the website home page...........................................passed
+When I click on the "Favorites" button......................................passed
+And I click on the "Search" button..........................................passed
+And I click on the "Favorites" button.......................................passed
+Then I can see my favorites list............................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Ordering is persistent" time="5.177">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I hover over the title of song 2.......................................passed
+And I click on the "Move Up" button.........................................passed
+And I click on the "Search" button..........................................passed
+And I click on the "Favorites" button.......................................passed
+Then Song 2 "Love Yourself" should be the first song on my favorites list...passed
+]]></system-out>
+</testcase>
+<testcase classname="Favorites list" name="Privacy setting is persistent" time="4.423">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the favorites page..............................................passed
+When I click on the "Account Public" button.................................passed
+And I click on the "Search" button..........................................passed
+And I click on the "Favorites" button.......................................passed
+Then My account should be public............................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Default ordering list is descending by frequency" time="6.673">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "user2" in the search friends field............................passed
+And I click the "Submit" button.............................................passed
+Then I should see list of songs high to low frequency.......................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Display comparison list with frequency" time="4.135">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "user2" in the search friends field............................passed
+And I click the "Submit" button.............................................passed
+Then I should see a list of shared favorite songs...........................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Toggle sorting order for list" time="4.49">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "user2" in the search friends field............................passed
+And I click the "Submit" button.............................................passed
+And I click the "Sort Ascending" button.....................................passed
+Then I should see list of songs low to high frequency.......................passed
+When I click the "Sort Descending" button...................................passed
+Then I should see list of songs high to low frequency.......................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="All songs are unique among friends" time="4.536">
+<system-out><![CDATA[
+Given None of the songs are shared between my friends' favorites lists......passed
+And I am logged in as "user4" and on the friends comparison page............passed
+When I enter "user5" in the search friends field............................passed
+And I click the "Submit" button.............................................passed
+Then I should see a list of songs each with a frequency of 1................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Hovering over frequency number shows list of friends" time="3.803">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "user2" in the search friends field............................passed
+And I click the "Submit" button.............................................passed
+And I enter "user3" in the search friends field.............................passed
+And I hover over the frequency number next to song1.........................passed
+Then I see the usernames of friends who favorited that song.................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Clicking on a song title shows song details" time="4.977">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "user2" in the search friends field............................passed
+And I click the "Submit" button.............................................passed
+And I click on the song title "Sorry".......................................passed
+Then I should see the song's artist and year of recording...................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Error message when adding a non-existent friend" time="4.085">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "Bob" in the search friends field..............................passed
+And I click the "Submit" button.............................................passed
+Then I should see an error message "User does not exist"....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Friends Feature to compare users' favorite songs" name="Error message when adding a private friend" time="4.946">
+<system-out><![CDATA[
+Given There are multiple users with public accounts and favorites...........passed
+And User Joe exists but has a private account...............................passed
+And I am logged in and on the friends comparison page.......................passed
+When I enter "Joe" in the search friends field..............................passed
+And I click the "Submit" button.............................................passed
+Then I should see an error message "User account is private"................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Initial Page is Login Page" time="3.028">
+<system-out><![CDATA[
+Given I am on the homepage..................................................passed
+Then I should see the title "Login".........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="See Website Name" time="1.585">
+<system-out><![CDATA[
+Given I am on the login homepage............................................passed
+Then I should see the website name "Let's Get Lyrical"......................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Access Account Creation from Login" time="2.316">
+<system-out><![CDATA[
+Given I am on the login homepage............................................passed
+And I click the "Register" button...........................................passed
+Then I should see the title "Create Account"................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Successful Account Creation" time="3.073">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "Login123" in the "confirmPassword" field.......................passed
+And I click the "Create" button.............................................passed
+Then I should see the success message "Account created successfully!".......passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Cancel Account Creation" time="2.612">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "Login123" in the "confirmPassword" field.......................passed
+And I click the "Cancel" button.............................................passed
+Then I should see the "Confirm Cancellation" popup..........................passed
+And I click the "Yes" button................................................passed
+Then I should see the error message "Registration cancelled"................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Cancel Account Creation and Change Mind" time="2.634">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "Login123" in the "confirmPassword" field.......................passed
+And I click the "Cancel" button.............................................passed
+And I click the "No" button.................................................passed
+Then I should not see the "Confirm Cancellation" popup......................passed
+And I should see the the login homepage with "Jeena" and "Login123".........passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Passwords Don’t Match" time="2.12">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "Login1234" in the "confirmPassword" field......................passed
+And I click the "Create" button.............................................passed
+Then I should see the error message "Passwords do not match"................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Taken Username" time="3.037">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When The username "Jeena" already exists with password "Login123"...........passed
+And I click the "Register" button...........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "Login123" in the "confirmPassword" field.......................passed
+And I click the "Create" button.............................................passed
+Then I should see the error message "Username already exists"...............passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Invalid Password" time="1.675">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "login123" in the "password" field..............................passed
+And I enter "login123" in the "confirmPassword" field.......................passed
+And I click the "Create" button.............................................passed
+Then I should see the error message "Invalid password"......................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Didn’t Confirm Password" time="4.673">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "" in the "confirmPassword" field...............................passed
+And I click the "Create" button.............................................passed
+Then I should see the error message "Please fill both password fields"......passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Didn’t Enter Username" time="3.349">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+And I click the "Register" button...........................................passed
+And I enter "" in the "username" field......................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I enter "Login123" in the "confirmPassword" field.......................passed
+And I click the "Create" button.............................................passed
+Then I should see the error message "Username can't be empty"...............passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Didn’t Enter Password" time="2.231">
+<system-out><![CDATA[
+Given I am on the register homepage.........................................passed
+When I click the "Register" button..........................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "" in the "password" field......................................passed
+And I enter "Login123" in the "confirmPassword" field.......................passed
+And I click the "Create" button.............................................passed
+Then I should see the error message "Please fill both password fields"......passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Successful Account Login" time="3.554">
+<system-out><![CDATA[
+Given I am on the login homepage............................................passed
+And The username "Jeena" already exists with password "Login123"............passed
+When I click the "Login" button.............................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login123" in the "password" field..............................passed
+And I click the Login button to login.......................................passed
+Then I should see the success message "Welcome back"........................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Failed Account Login" time="4.609">
+<system-out><![CDATA[
+Given I am on the login homepage............................................passed
+When The username "Jeena" already exists with password "Login123"...........passed
+And I click the "Login" button..............................................passed
+And I enter "Jeena" in the "username" field.................................passed
+And I enter "Login1234" in the "password" field.............................passed
+And I click the Login button to login.......................................passed
+Then I should see the error message "Username or password is incorrect".....passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Three Failed Account Login Attempts Under a Minute and Lock" time="34.761">
+<system-out><![CDATA[
+Given I am on the login homepage............................................passed
+And I click the "Login" button..............................................passed
+And The username "JB" already exists with password "Login123"...............passed
+And I enter "JB" in the "username" field....................................passed
+And I try "Log12" as the "password" field 3 times within 50 sec.............passed
+Then I should see the error message "Account locked due to multiple failed login attempts. Please try again in 30 seconds.".passed
+And I wait for 30 seconds...................................................passed
+Then I should see the success message "Account unlocked. Try again".........passed
+]]></system-out>
+</testcase>
+<testcase classname="Login" name="Three Failed Account Login Attempts Over a Minute" time="135.583">
+<system-out><![CDATA[
+Given I am on the login homepage............................................passed
+And I click the "Login" button..............................................passed
+And The username "Jeena" already exists with password "Login123"............passed
+And I enter "Jeena" in the "username" field.................................passed
+And I try "Log12" as the "password" field 3 times within 180 sec............passed
+Then I should not see the error message "Account locked due to multiple failed login attempts. Please try again in 30 seconds.".passed
+]]></system-out>
+</testcase>
+<testcase classname="Finding lyrical soulmate or enemy" name="I don't find my lyrical soulmate" time="6.019">
+<system-out><![CDATA[
+Given I am the only user with a public account..............................passed
+And I am logged in and on the match page....................................passed
+When I click on the "Find Soulmate" button..................................passed
+Then I should see a message "Error finding user: No soulmate found".........passed
+]]></system-out>
+</testcase>
+<testcase classname="Finding lyrical soulmate or enemy" name="I successfully find my lyrical soulmate" time="5.58">
+<system-out><![CDATA[
+Given There are multiple users with public accounts.........................passed
+And I am logged in and on the match page....................................passed
+When I click on the "Find Soulmate" button..................................passed
+Then I should see the username "user2"......................................passed
+And I should see a list of their favorites..................................passed
+And I should see a "positive" animation.....................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Finding lyrical soulmate or enemy" name="I don't find my lyrical enemy" time="5.107">
+<system-out><![CDATA[
+Given I am the only user with a public account..............................passed
+And I am logged in and on the match page....................................passed
+When I click on the "Find Enemy" button.....................................passed
+Then I should see a message "Error finding user: No enemy found"............passed
+]]></system-out>
+</testcase>
+<testcase classname="Finding lyrical soulmate or enemy" name="I successfully find my lyrical enemy" time="13.066">
+<failure type="org.openqa.selenium.TimeoutException" message="Expected condition failed: waiting for element to be clickable: By.xpath: //button[text()='Find Enemy'] (tried for 10 second(s) with 500 milliseconds interval)
+Build info: version: '4.17.0', revision: 'e52b1be057*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '14.4.1', java.version: '21.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 135.0.7049.116, chrome: {chromedriverVersion: 135.0.7049.114 (63fd8a7d9d0..., userDataDir: /var/folders/tw/djq1qjxx4_v...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:53563}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:53563/devtoo..., se:cdpVersion: 135.0.7049.116, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: f616b98482c5425afcb621326b33de11">
+<![CDATA[org.openqa.selenium.TimeoutException: Expected condition failed: waiting for element to be clickable: By.xpath: //button[text()='Find Enemy'] (tried for 10 second(s) with 500 milliseconds interval)
+Build info: version: '4.17.0', revision: 'e52b1be057*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '14.4.1', java.version: '21.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 135.0.7049.116, chrome: {chromedriverVersion: 135.0.7049.114 (63fd8a7d9d0..., userDataDir: /var/folders/tw/djq1qjxx4_v...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:53563}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:53563/devtoo..., se:cdpVersion: 135.0.7049.116, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: f616b98482c5425afcb621326b33de11
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at edu.usc.csci310.project.FavoritesStepDefs.iClickTheButton(FavoritesStepDefs.java:91)
+	at ✽.I click on the "Find Enemy" button(classpath:edu/usc/csci310/project/Match.feature:25)
+]]>
+</failure>
+<system-out><![CDATA[
+Given There are multiple users with public accounts.........................passed
+And I am logged in and on the match page....................................passed
+When I click on the "Find Enemy" button.....................................failed
+Then I should see the username "user3"......................................skipped
+And I should see a list of their favorites..................................skipped
+And I should see a "negative" animation.....................................skipped
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Create a regular word cloud with valid inputs" time="8.421">
+<failure type="org.openqa.selenium.TimeoutException" message="Expected condition failed: waiting for visibility of element located by By.xpath: /html/body/div/div/main/div/main/div/div[1]/input[1] (tried for 5 second(s) with 500 milliseconds interval)
+Build info: version: '4.17.0', revision: 'e52b1be057*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '14.4.1', java.version: '21.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 135.0.7049.116, chrome: {chromedriverVersion: 135.0.7049.114 (63fd8a7d9d0..., userDataDir: /var/folders/tw/djq1qjxx4_v...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:53591}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:53591/devtoo..., se:cdpVersion: 135.0.7049.116, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: fc535141d8442a6c27ee9fa07d22eee5">
+<![CDATA[org.openqa.selenium.TimeoutException: Expected condition failed: waiting for visibility of element located by By.xpath: /html/body/div/div/main/div/main/div/div[1]/input[1] (tried for 5 second(s) with 500 milliseconds interval)
+Build info: version: '4.17.0', revision: 'e52b1be057*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '14.4.1', java.version: '21.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 135.0.7049.116, chrome: {chromedriverVersion: 135.0.7049.114 (63fd8a7d9d0..., userDataDir: /var/folders/tw/djq1qjxx4_v...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:53591}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:53591/devtoo..., se:cdpVersion: 135.0.7049.116, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: fc535141d8442a6c27ee9fa07d22eee5
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at edu.usc.csci310.project.WordCloudStepDefs.iEnterInTheSearchField(WordCloudStepDefs.java:342)
+	at ✽.I enter "Taylor Swift" in the artist search field(classpath:edu/usc/csci310/project/WordCloud.feature:6)
+]]>
+</failure>
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Taylor Swift" in the artist search field......................failed
+And I enter "7" in the song count field.....................................skipped
+And I click the "Submit" button.............................................skipped
+Then I should see a cloud with the top 100 words from the top 7 songs.......skipped
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Create new word cloud from favorites list" time="7.725">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And I am on the word cloud homepage.........................................passed
+When I click the "Generate word cloud based on favorites" button............passed
+Then I should see words from songs in the favorites list in the word cloud..passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Add favorites to existing word cloud" time="15.744">
+<system-out><![CDATA[
+Given I am logged in and have songs on my favorites list....................passed
+And there is an existing word cloud.........................................passed
+When I click the "Update existing word cloud with favorites" button.........passed
+Then I should see words from songs in the favorites list in the word cloud..passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Create a word cloud with songs from multiple artists" time="18.428">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+And I enter "Taylor Swift" in the artist search field.......................passed
+And I enter "7" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+And I should see a cloud with the top 100 words from the top 7 songs........passed
+When I enter "Justin Bieber" in the artist search field.....................passed
+And I enter "3" in the song count field.....................................passed
+And I click the "Update existing word cloud with Search" button.............passed
+Then the word cloud should update to have songs from multiple artists.......passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Create a word cloud with songs from multiple artists - no number" time="20.297">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+And I enter "Taylor Swift" in the artist search field.......................passed
+And I enter "7" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+And I should see a cloud with the top 100 words from the top 7 songs........passed
+When I enter "Justin Bieber" in the artist search field.....................passed
+And I enter "" in the song count field......................................passed
+And I click the "Update existing word cloud with Search" button.............passed
+And I should see a song selection dialogue..................................passed
+And I select the song "Sorry"...............................................passed
+And I click the submit button in the dialogue...............................passed
+Then the word cloud should update to have songs from multiple artists.......passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Error message for an illegal artist name" time="3.82">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Taylor@Swfit!" in the artist search field.....................passed
+And I enter "7" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+Then I should see the error message "Invalid name format"...................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Error message for an invalid song count input" time="2.738">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Justin Bieber" in the artist search field.....................passed
+And I enter "!" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+Then I should see the error message "Invalid song count"....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Error message for no artist name" time="2.715">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "7" in the song count field....................................passed
+And I click the "Submit" button.............................................passed
+Then I should see the error message "Please enter an artist name"...........passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Error message for no input" time="3.321">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I click the "Submit" button............................................passed
+Then I should see the error message "Please enter an artist name"...........passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Generate word cloud using default song count when no count is provided" time="6.481">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Tate McRae" in the artist search field........................passed
+And I enter "" in the song count field......................................passed
+And I click the "Submit" button.............................................passed
+Then I should see a song selection dialogue.................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Click &quot;Add Song&quot; without selecting a song" time="6.115">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Tate McRae" in the artist search field........................passed
+And I enter "" in the song count field......................................passed
+And I click the "Submit" button.............................................passed
+And I should see a song selection dialogue..................................passed
+And I click the submit button in the dialogue...............................passed
+Then I should see the error message "Please select at least one song to add".passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Toggle word cloud display between graphical and table views" time="14.024">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+When I click the "View as table" button.....................................passed
+Then I should see a table listing words and their frequencies...............passed
+When I click the "View as graph" button.....................................passed
+Then I should see the graphical word cloud..................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Interact with a word in the word cloud to view song details" time="36.555">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+When I click on the word "baby" in the word cloud...........................passed
+Then I should see a list of songs with the word "baby" and its frequency....passed
+When I click on a song title "Cruel Summer" from the list...................passed
+Then I should see the lyrics of the song with the word "baby" highlighted...passed
+And I should see the song details (title, artist, year).....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Interact with a word in the table to view song details" time="39.366">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+When I click on the word "know" in the table................................passed
+Then I should see a list of songs with the word "know" and its frequency....passed
+When I click on a song title "Cruel Summer" from the list...................passed
+Then I should see the lyrics of the song with the word "know" highlighted...passed
+And I should see the song details (title, artist, year).....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Hover over a song title and add the song to favorites" time="22.505">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+When I click on the word "baby" in the word cloud...........................passed
+Then I should see a list of songs with the word "baby" and its frequency....passed
+When I hover over the song title "Cruel Summer".............................passed
+Then a popup should appear with an option to add to favorites...............passed
+When I click the "Yes" button...............................................passed
+Then "Cruel Summer" should be added to my favorites list....................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Size of words maps to their frequency" time="6.651">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Justin Bieber" in the artist search field.....................passed
+And I enter "3" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+Then "hit" is displayed "smaller"...........................................passed
+And "sorry" is displayed "larger"...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Add song to empty word cloud (favorites)" time="3.149">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I click the "Update existing word cloud with favorites" button.........passed
+Then I should see the error message "Can't update empty word cloud".........passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Add song to empty word cloud (search)" time="2.676">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I click the "Update existing word cloud with Search" button............passed
+Then I should see the error message "Please enter an artist name"...........passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Word cloud generation occurs within time limits" time="4.983">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Taylor Swift" in the artist search field......................passed
+And I enter "1" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+Then the word cloud should be generated in less than 1 second...............passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Word cloud has no filler words" time="12.901">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+When the lyrics contain filler words like "ooh".............................passed
+Then the word cloud should not contain "ooh"................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Word cloud has no stemming" time="11.809">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+When the lyrics contains stem words like "killing"..........................passed
+Then the word cloud should not contain "killing"............................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="The word cloud displays a maximum of 100 words" time="9.981">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And there is an existing word cloud.........................................passed
+And there are more than 100 words in the lyrics.............................passed
+Then the word cloud should display no more than 100 words...................passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Ambiguous artist selection" time="7.236">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "Justin" in the artist search field............................passed
+And I click the "Submit" button.............................................passed
+Then I should see a popup with all artists named "Justin" with their photos.passed
+When I select "Justin Bieber"...............................................passed
+Then I should see a list of popular songs for "Justin Bieber"...............passed
+]]></system-out>
+</testcase>
+<testcase classname="Creating a new word cloud" name="Unknown artist selection" time="3.591">
+<system-out><![CDATA[
+Given I am logged in........................................................passed
+And I am on the word cloud homepage.........................................passed
+When I enter "UnknownArtistXXX" in the artist search field..................passed
+And I enter "3" in the song count field.....................................passed
+And I click the "Submit" button.............................................passed
+Then I should see the error message "No matching artist found"..............passed
+]]></system-out>
+</testcase>
+</testsuite>

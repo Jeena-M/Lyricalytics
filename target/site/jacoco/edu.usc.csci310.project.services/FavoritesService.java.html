@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FavoritesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.services</a> &gt; <span class="el_source">FavoritesService.java</span></div><h1>FavoritesService.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.services;
+
+import edu.usc.csci310.project.models.Song;
+import edu.usc.csci310.project.models.WordFrequency;
+import edu.usc.csci310.project.requests.AddSongToFavorites;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.sql.*;
+import java.util.*;
+
+import static edu.usc.csci310.project.requests.LyricsRequest.getLyricsFromTitleArtist;
+import static edu.usc.csci310.project.requests.WordFrequencyRequest.getTop100WordFrequencies;
+import static edu.usc.csci310.project.services.LyricsProcessing.processLyrics;
+
+@Service
+public class FavoritesService {
+    private final Connection connection;
+    private final WordCloudService wordCloudService;
+
+    @Autowired
+<span class="fc" id="L22">    public FavoritesService(Connection connection, WordCloudService wordCloudService) {</span>
+<span class="fc" id="L23">        this.connection = connection;</span>
+<span class="fc" id="L24">        this.wordCloudService = wordCloudService;</span>
+<span class="fc" id="L25">    }</span>
+
+    public int addSongToFavoritesList (AddSongToFavorites request) throws SQLException {
+        // Check if the song already exists for the user
+<span class="fc" id="L29">        int result = 0;</span>
+<span class="fc" id="L30">        String checkSql = &quot;SELECT id FROM favorites WHERE song = ? AND artist = ? AND username = ?&quot;;</span>
+        //String artistName = request.getArtistName().toLowerCase();
+<span class="fc" id="L32">        List&lt;String&gt; existingArtists = wordCloudService.getArtistsForUser(request.getUsername());</span>
+<span class="fc" id="L33">        List&lt;String&gt; existingSongs = wordCloudService.getSongsForUser(request.getUsername());</span>
+<span class="fc" id="L34">        int index = existingSongs.indexOf(request.getSongName());</span>
+<span class="fc" id="L35">        String artistName = existingArtists.get(index).toLowerCase();</span>
+<span class="fc" id="L36">        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {</span>
+<span class="fc" id="L37">            checkStmt.setString(1, request.getSongName());</span>
+<span class="fc" id="L38">            checkStmt.setString(2, artistName);</span>
+<span class="fc" id="L39">            checkStmt.setString(3, request.getUsername());</span>
+
+<span class="fc" id="L41">            ResultSet rs = checkStmt.executeQuery();</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            if (rs.next()) {</span>
+<span class="fc" id="L43">                result = -1; // Already exists</span>
+            }
+        }
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if(result == -1){</span>
+<span class="fc" id="L47">            return result;</span>
+        }
+
+
+
+
+
+<span class="fc" id="L54">        String sql = &quot;INSERT INTO favorites (song, artist, username) VALUES (?, ?, ?)&quot;;</span>
+<span class="fc" id="L55">        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+
+            // Set parameters for the insert statement
+<span class="fc" id="L58">            stmt.setString(1, request.getSongName());</span>
+<span class="fc" id="L59">            stmt.setString(2, artistName);</span>
+<span class="fc" id="L60">            stmt.setString(3, request.getUsername());</span>
+
+            // Execute the insert statement
+<span class="fc" id="L63">            int rowsAffected = stmt.executeUpdate();</span>
+
+            // Check if insert was successful
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (rowsAffected &gt; 0) {</span>
+                // SQLite specific: Retrieve the last inserted row ID
+<span class="fc" id="L68">                try (Statement statement = connection.createStatement();</span>
+<span class="fc" id="L69">                     ResultSet rs = statement.executeQuery(&quot;SELECT last_insert_rowid()&quot;)) {</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                    if (rs.next()) {</span>
+<span class="fc" id="L71">                        return rs.getInt(1); // Return the generated ID</span>
+                    } else {
+<span class="fc" id="L73">                        throw new SQLException(&quot;Failed to retrieve the generated ID.&quot;);</span>
+                    }
+                }
+            } else {
+<span class="fc" id="L77">                throw new SQLException(&quot;No rows affected during the insert.&quot;);</span>
+            }
+<span class="fc" id="L79">        } catch (SQLException e) {</span>
+<span class="fc" id="L80">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L81">            throw new SQLException(&quot;Problem with connection to DB.&quot;);</span>
+        }
+    }
+
+    public List&lt;WordFrequency&gt; generateWordCloudFromFavoritesList(String username) throws SQLException {
+<span class="fc" id="L86">        List&lt;Song&gt; favoritesSongs = getFavoritesForUser(username);</span>
+<span class="fc" id="L87">        List&lt;String&gt; artists = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L88">        List&lt;String&gt; songs = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (Song song : favoritesSongs) {</span>
+<span class="fc" id="L90">            songs.add(song.getTitle());</span>
+<span class="fc" id="L91">            artists.add(song.getArtist());</span>
+<span class="fc" id="L92">        }</span>
+
+
+<span class="fc" id="L95">        wordCloudService.setSongsForUser(username, songs);</span>
+<span class="fc" id="L96">        wordCloudService.setArtistsForUser(username, artists);</span>
+
+<span class="fc" id="L98">        String lyricsForAllSongs = &quot;&quot;;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (Song song : favoritesSongs) {</span>
+            try {
+<span class="fc" id="L101">                String lyrics = getLyricsFromTitleArtist(song.getTitle(), song.getArtist());</span>
+<span class="fc" id="L102">                lyricsForAllSongs += lyrics;</span>
+<span class="fc" id="L103">                lyricsForAllSongs += &quot;\n&quot;;</span>
+<span class="fc" id="L104">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L106">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L107">                e.printStackTrace();</span>
+<span class="fc" id="L108">            }</span>
+
+<span class="fc" id="L110">        }</span>
+
+<span class="fc" id="L112">        List&lt;String&gt; processedLyrics  = processLyrics(lyricsForAllSongs);</span>
+
+<span class="fc" id="L114">        List&lt;WordFrequency&gt; top100 = getTop100WordFrequencies(processedLyrics);</span>
+
+<span class="fc" id="L116">        return top100;</span>
+
+    }
+
+    public List&lt;Song&gt; getFavoritesForUser(String username) throws SQLException {
+<span class="fc" id="L121">        List&lt;Song&gt; favorites = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L123">        String sql = &quot;SELECT song, artist FROM favorites WHERE username = ?&quot;;</span>
+
+<span class="fc" id="L125">        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){</span>
+
+<span class="fc" id="L127">            stmt.setString(1, username);</span>
+
+<span class="fc" id="L129">            ResultSet rs = stmt.executeQuery();</span>
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            while (rs.next()) {</span>
+<span class="fc" id="L132">                String song = rs.getString(&quot;song&quot;);</span>
+<span class="fc" id="L133">                String artist = rs.getString(&quot;artist&quot;);</span>
+<span class="fc" id="L134">                favorites.add(new Song(song, artist, &quot;&quot;, &quot;&quot;));</span>
+<span class="fc" id="L135">            }</span>
+
+<span class="fc" id="L137">        } catch (SQLException e) {</span>
+<span class="fc" id="L138">            e.printStackTrace();</span>
+<span class="fc" id="L139">        }</span>
+
+<span class="fc" id="L141">        return favorites;</span>
+    }
+
+    public int deleteFavoritesByUsername(String username) throws SQLException {
+<span class="fc" id="L145">        String sql = &quot;DELETE FROM favorites WHERE username = ?&quot;;</span>
+<span class="fc" id="L146">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L147">            stmt.setString(1, username);</span>
+<span class="fc" id="L148">            return stmt.executeUpdate();</span>
+<span class="fc" id="L149">        } catch (SQLException e) {</span>
+<span class="fc" id="L150">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L151">            throw new SQLException(&quot;Failed to delete favorites for username.&quot;);</span>
+        }
+    }
+
+    public int deleteSongByUsernameAndSong(String username, String song, String artist) throws SQLException {
+<span class="fc" id="L156">        String sql = &quot;DELETE FROM favorites WHERE username = ? AND song = ? AND artist = ?&quot;;</span>
+<span class="fc" id="L157">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L158">            stmt.setString(1, username);</span>
+<span class="fc" id="L159">            stmt.setString(2, song);</span>
+<span class="fc" id="L160">            stmt.setString(3, artist);</span>
+<span class="fc" id="L161">            return stmt.executeUpdate();</span>
+<span class="fc" id="L162">        } catch (SQLException e) {</span>
+<span class="fc" id="L163">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L164">            throw new SQLException(&quot;Failed to delete this song for username.&quot;);</span>
+        }
+    }
+
+    public void moveSongUpInFavoritesList(String username, String song, String artist) throws SQLException {
+<span class="fc" id="L169">        String sql = &quot;SELECT id FROM favorites WHERE username = ? AND song = ? AND artist = ?&quot;;</span>
+<span class="fc" id="L170">        int currId = -1;</span>
+
+<span class="fc" id="L172">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L173">            stmt.setString(1, username);</span>
+<span class="fc" id="L174">            stmt.setString(2, song);</span>
+<span class="fc" id="L175">            stmt.setString(3, artist);</span>
+
+<span class="fc" id="L177">            ResultSet rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            if (rs.next()) {</span>
+<span class="fc" id="L179">                currId = rs.getInt(&quot;id&quot;);</span>
+            }
+<span class="fc" id="L181">        } catch (SQLException e) {</span>
+<span class="fc" id="L182">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L183">            throw new SQLException(&quot;Failed to find this song's id.&quot;);</span>
+<span class="fc" id="L184">        }</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if(currId == -1){</span>
+<span class="fc" id="L186">            return;</span>
+        }
+
+<span class="fc" id="L189">        int idAbove = currId - 1;</span>
+<span class="fc" id="L190">        String usernameAbove = &quot;&quot;;</span>
+<span class="fc" id="L191">        String artistAbove = &quot;&quot;;</span>
+<span class="fc" id="L192">        String songAbove = &quot;&quot;;</span>
+
+<span class="fc" id="L194">        String sql2 = &quot;SELECT username, song, artist FROM favorites WHERE id = ?&quot;;</span>
+<span class="fc" id="L195">        try (PreparedStatement stmt2 = connection.prepareStatement(sql2)) {</span>
+<span class="fc" id="L196">            stmt2.setInt(1, idAbove);</span>
+
+<span class="fc" id="L198">            ResultSet rs2 = stmt2.executeQuery();</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (rs2.next()) {</span>
+<span class="fc" id="L200">                usernameAbove = rs2.getString(&quot;username&quot;);</span>
+<span class="fc" id="L201">                songAbove = rs2.getString(&quot;song&quot;);</span>
+<span class="fc" id="L202">                artistAbove = rs2.getString(&quot;artist&quot;);</span>
+            }
+<span class="fc" id="L204">        } catch (SQLException e) {</span>
+<span class="fc" id="L205">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L206">            throw new SQLException(&quot;Failed to find song above.&quot;);</span>
+<span class="fc" id="L207">        }</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        if(usernameAbove.isEmpty()){</span>
+<span class="fc" id="L209">            return;</span>
+        }
+
+        try {
+<span class="fc" id="L213">            String sql3 = &quot;UPDATE favorites SET song = ?, artist = ? WHERE id = ?&quot;;</span>
+<span class="fc" id="L214">            try (PreparedStatement stmt3 = connection.prepareStatement(sql3)) {</span>
+<span class="fc" id="L215">                stmt3.setString(1, song);</span>
+<span class="fc" id="L216">                stmt3.setString(2, artist);</span>
+<span class="fc" id="L217">                stmt3.setInt(3, idAbove);</span>
+<span class="fc" id="L218">                stmt3.executeUpdate();</span>
+            }
+
+<span class="fc" id="L221">            String sql4 = &quot;UPDATE favorites SET song = ?, artist = ? WHERE id = ?&quot;;</span>
+<span class="fc" id="L222">            try (PreparedStatement stmt4 = connection.prepareStatement(sql4)) {</span>
+<span class="fc" id="L223">                stmt4.setString(1, songAbove);</span>
+<span class="fc" id="L224">                stmt4.setString(2, artistAbove);</span>
+<span class="fc" id="L225">                stmt4.setInt(3, currId);</span>
+<span class="fc" id="L226">                stmt4.executeUpdate();</span>
+            }
+
+<span class="fc" id="L229">        } catch (SQLException e) {</span>
+<span class="fc" id="L230">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L231">            throw new SQLException(&quot;Failed to swap.&quot;);</span>
+<span class="fc" id="L232">        }</span>
+<span class="fc" id="L233">    }</span>
+
+
+    public void moveSongDownInFavoritesList(String username, String song, String artist) throws SQLException {
+<span class="fc" id="L237">        String sql = &quot;SELECT id FROM favorites WHERE username = ? AND song = ? AND artist = ?&quot;;</span>
+<span class="fc" id="L238">        int currId = -1;</span>
+
+<span class="fc" id="L240">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L241">            stmt.setString(1, username);</span>
+<span class="fc" id="L242">            stmt.setString(2, song);</span>
+<span class="fc" id="L243">            stmt.setString(3, artist);</span>
+
+<span class="fc" id="L245">            ResultSet rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">            if (rs.next()) {</span>
+<span class="fc" id="L247">                currId = rs.getInt(&quot;id&quot;);</span>
+            }
+<span class="fc" id="L249">        } catch (SQLException e) {</span>
+<span class="fc" id="L250">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L251">            throw new SQLException(&quot;Failed to find this song's id.&quot;);</span>
+<span class="fc" id="L252">        }</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        if(currId == -1){</span>
+<span class="fc" id="L254">            return;</span>
+        }
+
+<span class="fc" id="L257">        int idBelow = currId + 1;</span>
+<span class="fc" id="L258">        String usernameBelow = &quot;&quot;;</span>
+<span class="fc" id="L259">        String artistBelow = &quot;&quot;;</span>
+<span class="fc" id="L260">        String songBelow = &quot;&quot;;</span>
+
+<span class="fc" id="L262">        String sql2 = &quot;SELECT username, song, artist FROM favorites WHERE id = ?&quot;;</span>
+<span class="fc" id="L263">        try (PreparedStatement stmt2 = connection.prepareStatement(sql2)) {</span>
+<span class="fc" id="L264">            stmt2.setInt(1, idBelow);</span>
+
+<span class="fc" id="L266">            ResultSet rs2 = stmt2.executeQuery();</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">            if (rs2.next()) {</span>
+<span class="fc" id="L268">                usernameBelow = rs2.getString(&quot;username&quot;);</span>
+<span class="fc" id="L269">                songBelow = rs2.getString(&quot;song&quot;);</span>
+<span class="fc" id="L270">                artistBelow = rs2.getString(&quot;artist&quot;);</span>
+            }
+<span class="fc" id="L272">        } catch (SQLException e) {</span>
+<span class="fc" id="L273">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L274">            throw new SQLException(&quot;Failed to find song below.&quot;);</span>
+<span class="fc" id="L275">        }</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">        if(usernameBelow.isEmpty()){</span>
+<span class="fc" id="L277">            return;</span>
+        }
+
+        try {
+<span class="fc" id="L281">            String sql3 = &quot;UPDATE favorites SET song = ?, artist = ? WHERE id = ?&quot;;</span>
+<span class="fc" id="L282">            try (PreparedStatement stmt3 = connection.prepareStatement(sql3)) {</span>
+<span class="fc" id="L283">                stmt3.setString(1, song);</span>
+<span class="fc" id="L284">                stmt3.setString(2, artist);</span>
+<span class="fc" id="L285">                stmt3.setInt(3, idBelow);</span>
+<span class="fc" id="L286">                stmt3.executeUpdate();</span>
+            }
+
+<span class="fc" id="L289">            String sql4 = &quot;UPDATE favorites SET song = ?, artist = ? WHERE id = ?&quot;;</span>
+<span class="fc" id="L290">            try (PreparedStatement stmt4 = connection.prepareStatement(sql4)) {</span>
+<span class="fc" id="L291">                stmt4.setString(1, songBelow);</span>
+<span class="fc" id="L292">                stmt4.setString(2, artistBelow);</span>
+<span class="fc" id="L293">                stmt4.setInt(3, currId);</span>
+<span class="fc" id="L294">                stmt4.executeUpdate();</span>
+            }
+
+<span class="fc" id="L297">        } catch (SQLException e) {</span>
+<span class="fc" id="L298">            System.out.println(e.getMessage());</span>
+<span class="fc" id="L299">            throw new SQLException(&quot;Failed to swap.&quot;);</span>
+<span class="fc" id="L300">        }</span>
+<span class="fc" id="L301">    }</span>
+
+    public List&lt;WordFrequency&gt; updateExistingWordCloud (String username, String wordCloudJson) throws Exception {
+<span class="fc" id="L304">        List&lt;WordFrequency&gt; existingWordCloud = WordCloudParser.parseWordFrequencies(wordCloudJson);</span>
+
+<span class="fc" id="L306">        List&lt;Song&gt; favoritesSongs = getFavoritesForUser(username);</span>
+
+<span class="fc" id="L308">        Map&lt;String, List&lt;String&gt;&gt; wordToSongs = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L309">        Map&lt;String, List&lt;String&gt;&gt; wordToArtists = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L310">        Map&lt;String, String&gt; songToArtists = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L312" title="All 2 branches covered.">        for (Song song : favoritesSongs) {</span>
+<span class="fc" id="L313">            songToArtists.put(song.getTitle(), song.getArtist());</span>
+<span class="fc" id="L314">            System.out.println(&quot;Hi: &quot;+song.getArtist());</span>
+<span class="fc" id="L315">        }</span>
+
+<span class="fc" id="L317">        String lyricsForAllSongs = &quot;&quot;;</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        for (Song song : favoritesSongs) {</span>
+            try {
+<span class="fc" id="L320">                String lyrics = getLyricsFromTitleArtist(song.getTitle(), song.getArtist());</span>
+<span class="fc" id="L321">                lyricsForAllSongs += lyrics;</span>
+<span class="fc" id="L322">                lyricsForAllSongs += &quot;\n&quot;;</span>
+
+<span class="fc" id="L324">                List&lt;String&gt; processedWords = processLyrics(lyrics);</span>
+
+<span class="fc bfc" id="L326" title="All 2 branches covered.">                for (String word : processedWords) {</span>
+<span class="fc" id="L327">                    wordToSongs.computeIfAbsent(word, k -&gt; new ArrayList&lt;&gt;()).add(song.getTitle());</span>
+<span class="fc" id="L328">                    wordToArtists.computeIfAbsent(word, k -&gt; new ArrayList&lt;&gt;()).add(song.getArtist());</span>
+<span class="fc" id="L329">                }</span>
+<span class="fc" id="L330">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L332">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L333">                e.printStackTrace();</span>
+<span class="fc" id="L334">            }</span>
+
+<span class="fc" id="L336">        }</span>
+
+<span class="fc" id="L338">        List&lt;String&gt; existingSongs = wordCloudService.getSongsForUser(username);</span>
+<span class="fc" id="L339">        List&lt;String&gt; existingArtists = wordCloudService.getArtistsForUser(username);</span>
+
+<span class="fc" id="L341">        int l = 0;</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        for (String existingSong : existingSongs) {</span>
+<span class="fc" id="L343">            songToArtists.put(existingSong, existingArtists.get(l));</span>
+<span class="fc" id="L344">            l += 1;</span>
+<span class="fc" id="L345">        }</span>
+
+<span class="fc" id="L347">        int j = 0;</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">        for (String song : existingSongs) {</span>
+            try {
+<span class="fc" id="L350">                String lyrics = getLyricsFromTitleArtist(song, existingArtists.get(j));</span>
+
+<span class="fc" id="L352">                List&lt;String&gt; processedWords = processLyrics(lyrics);</span>
+
+<span class="fc bfc" id="L354" title="All 2 branches covered.">                for (String word : processedWords) {</span>
+<span class="fc" id="L355">                    wordToSongs.computeIfAbsent(word, k -&gt; new ArrayList&lt;&gt;()).add(song);</span>
+<span class="fc" id="L356">                    wordToArtists.computeIfAbsent(word, k -&gt; new ArrayList&lt;&gt;()).add(existingArtists.get(j));</span>
+<span class="fc" id="L357">                }</span>
+<span class="fc" id="L358">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L360">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L361">                e.printStackTrace();</span>
+<span class="fc" id="L362">            }</span>
+
+<span class="fc" id="L364">            j += 1;</span>
+
+<span class="fc" id="L366">        }</span>
+
+<span class="fc" id="L368">        List&lt;String&gt; processedLyrics  = processLyrics(lyricsForAllSongs);</span>
+
+<span class="fc" id="L370">        List&lt;WordFrequency&gt; top100Favorites = getTop100WordFrequencies(processedLyrics);</span>
+
+<span class="fc" id="L372">        List&lt;WordFrequency&gt; top100Overall = getTop100Overall(existingWordCloud, top100Favorites);</span>
+
+<span class="fc" id="L374">        List&lt;String&gt; songsUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L375">        List&lt;String&gt; artistsUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L376">        Set&lt;String&gt; seenSongs = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L378" title="All 2 branches covered.">        for (WordFrequency wf : top100Overall) {</span>
+<span class="fc" id="L379">            String word = wf.getWord();</span>
+
+<span class="fc" id="L381">            List&lt;String&gt; songsList   = wordToSongs.getOrDefault(word, Collections.emptyList());</span>
+<span class="fc" id="L382">            List&lt;String&gt; artistsList = wordToArtists.getOrDefault(word, Collections.emptyList());</span>
+<span class="fc" id="L383">            int limit = Math.min(songsList.size(), artistsList.size());</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">            for (int i = 0; i &lt; limit; i++) {</span>
+<span class="fc" id="L385">                String song   = songsList.get(i);</span>
+<span class="fc" id="L386">                String artist = songToArtists.get(song);</span>
+                // `add()` returns false if already seen, so this single guard replaces the old contains-check
+<span class="fc bfc" id="L388" title="All 2 branches covered.">                if (seenSongs.add(song)) {</span>
+<span class="fc" id="L389">                    songsUsed.add(song);</span>
+<span class="fc" id="L390">                    artistsUsed.add(artist);</span>
+                }
+            }
+<span class="fc" id="L393">        }</span>
+
+<span class="fc" id="L395">        System.out.println(&quot;Songs used in final word cloud: &quot; + songsUsed);</span>
+<span class="fc" id="L396">        System.out.println(&quot;Artists used in final word cloud: &quot; + artistsUsed);</span>
+
+<span class="fc" id="L398">        wordCloudService.setSongsForUser(username, songsUsed);</span>
+<span class="fc" id="L399">        wordCloudService.setArtistsForUser(username, artistsUsed);</span>
+
+<span class="fc" id="L401">        System.out.println(&quot;Songs stored: &quot; + wordCloudService.getSongsForUser(username));</span>
+<span class="fc" id="L402">        System.out.println(&quot;Artists stored: &quot; + wordCloudService.getArtistsForUser(username));</span>
+
+<span class="fc" id="L404">        return top100Overall;</span>
+    }
+
+    public List&lt;WordFrequency&gt; getTop100Overall (List&lt;WordFrequency&gt; existingWordCloud, List&lt;WordFrequency&gt; top100Favorites){
+<span class="fc" id="L408">        Map&lt;String, Integer&gt; frequencyMap = new HashMap&lt;&gt;();</span>
+
+        // Merge both lists into frequencyMap
+<span class="fc bfc" id="L411" title="All 2 branches covered.">        for (WordFrequency wf : existingWordCloud) {</span>
+<span class="fc" id="L412">            frequencyMap.put(wf.getWord(), frequencyMap.getOrDefault(wf.getWord(), 0) + wf.getCount());</span>
+<span class="fc" id="L413">        }</span>
+
+
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        for (WordFrequency wf : top100Favorites) {</span>
+<span class="fc" id="L417">            frequencyMap.put(wf.getWord(), frequencyMap.getOrDefault(wf.getWord(), 0) + wf.getCount());</span>
+<span class="fc" id="L418">        }</span>
+
+<span class="fc" id="L420">        List&lt;WordFrequency&gt; mergedList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L421" title="All 2 branches covered.">        for (Map.Entry&lt;String, Integer&gt; entry : frequencyMap.entrySet()) {</span>
+<span class="fc" id="L422">            mergedList.add(new WordFrequency(entry.getKey(), entry.getValue()));</span>
+<span class="fc" id="L423">        }</span>
+        // Sort by count descending
+<span class="fc" id="L425">        mergedList.sort((a, b) -&gt; Integer.compare(b.getCount(), a.getCount()));</span>
+
+        // Return top 100 (or fewer if less than 100 unique words in list)
+<span class="fc" id="L428">        return mergedList.subList(0, Math.min(100, mergedList.size()));</span>
+    }
+
+    public String togglePrivacyMode (boolean privacy, String username){
+<span class="fc" id="L432">        String sql = &quot;UPDATE users SET privacy = ? WHERE username = ?&quot;;</span>
+        String result;
+
+<span class="fc" id="L435">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc bfc" id="L436" title="All 2 branches covered.">            stmt.setInt(1, privacy ? 1 : 0);</span>
+<span class="fc" id="L437">            stmt.setString(2, username);</span>
+
+<span class="fc" id="L439">            int rowsUpdated = stmt.executeUpdate();</span>
+<span class="fc bfc" id="L440" title="All 2 branches covered.">            if (rowsUpdated &gt; 0) {</span>
+<span class="fc" id="L441">                result = &quot;Privacy setting updated.&quot;;</span>
+            } else {
+<span class="fc" id="L443">                result = &quot;No user found with the given username.&quot;;</span>
+            }
+<span class="fc" id="L445">        } catch (SQLException e) {</span>
+<span class="fc" id="L446">            e.printStackTrace();</span>
+<span class="fc" id="L447">            return &quot;Failed to update privacy setting.&quot;;</span>
+<span class="fc" id="L448">        }</span>
+<span class="fc" id="L449">        return result;</span>
+    }
+
+    public boolean getPrivacyMode(String username) throws SQLException {
+<span class="fc" id="L453">        String sql = &quot;SELECT privacy FROM users WHERE username = ?&quot;;</span>
+<span class="fc" id="L454">        try (PreparedStatement stmt = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L455">            stmt.setString(1, username);</span>
+<span class="fc" id="L456">            ResultSet rs = stmt.executeQuery();</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">            if (rs.next()) {</span>
+                // privacy column: 1 = private, 0 = public
+<span class="fc bfc" id="L459" title="All 2 branches covered.">                return rs.getInt(&quot;privacy&quot;) == 1;</span>
+            }
+<span class="fc" id="L461">            throw new SQLException(&quot;User not found&quot;);</span>
+        }
+    }
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

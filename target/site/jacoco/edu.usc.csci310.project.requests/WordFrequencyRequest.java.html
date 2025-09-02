@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WordFrequencyRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.requests</a> &gt; <span class="el_source">WordFrequencyRequest.java</span></div><h1>WordFrequencyRequest.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.requests;
+
+import edu.usc.csci310.project.models.WordFrequency;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+<span class="fc" id="L10">public class WordFrequencyRequest {</span>
+    public static List&lt;WordFrequency&gt; getTop100WordFrequencies(List&lt;String&gt; processedLyrics){
+<span class="fc" id="L12">        Map&lt;String, Integer&gt; wordCount = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L13" title="All 2 branches covered.">        for (String word : processedLyrics) {</span>
+<span class="fc bfc" id="L14" title="All 2 branches covered.">            if (wordCount.containsKey(word)){</span>
+<span class="fc" id="L15">                wordCount.put(word, wordCount.get(word)+1);</span>
+            } else{
+<span class="fc" id="L17">                wordCount.put(word, 1);</span>
+            }
+<span class="fc" id="L19">        }</span>
+
+<span class="fc" id="L21">        List&lt;WordFrequency&gt; wordFrequencies = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        for (Map.Entry&lt;String, Integer&gt; entry : wordCount.entrySet()) {</span>
+<span class="fc" id="L23">            wordFrequencies.add(new WordFrequency(entry.getKey(), entry.getValue()));</span>
+<span class="fc" id="L24">        }</span>
+
+<span class="fc" id="L26">        wordFrequencies.sort((wf1, wf2) -&gt; Integer.compare(wf2.getCount(), wf1.getCount()));</span>
+
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        return wordFrequencies.size() &gt; 100 ? wordFrequencies.subList(0, 100) : wordFrequencies;</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

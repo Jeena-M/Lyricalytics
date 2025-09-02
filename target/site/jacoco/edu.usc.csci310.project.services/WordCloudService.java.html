@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WordCloudService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.services</a> &gt; <span class="el_source">WordCloudService.java</span></div><h1>WordCloudService.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.services;
+
+import edu.usc.csci310.project.models.Artist;
+import edu.usc.csci310.project.models.Song;
+import edu.usc.csci310.project.models.SongFrequency;
+import edu.usc.csci310.project.models.WordFrequency;
+import edu.usc.csci310.project.requests.SpotifyRequest;
+import edu.usc.csci310.project.responses.Item;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import static edu.usc.csci310.project.requests.LyricsRequest.getLyricsFromTitleArtist;
+import static edu.usc.csci310.project.requests.WordFrequencyRequest.getTop100WordFrequencies;
+import static edu.usc.csci310.project.services.LyricsProcessing.processLyrics;
+
+@Service
+public class WordCloudService {
+    private SpotifyRequest spotReq;
+<span class="fc" id="L23">    private Map&lt;String, List&lt;String&gt;&gt; userWordClouds = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L24">    private Map&lt;String, List&lt;String&gt;&gt; artistWordClouds = new ConcurrentHashMap&lt;&gt;();</span>
+
+    @Autowired
+<span class="fc" id="L27">    public WordCloudService(SpotifyRequest spotReq) {</span>
+<span class="fc" id="L28">        this.spotReq = spotReq;</span>
+<span class="fc" id="L29">    }</span>
+
+    public void setSongsForUser(String username, List&lt;String&gt; songs) {
+<span class="fc" id="L32">        userWordClouds.put(username, songs);</span>
+<span class="fc" id="L33">    }</span>
+
+    public void setArtistsForUser(String username, List&lt;String&gt; artists) {
+<span class="fc" id="L36">        artistWordClouds.put(username, artists);</span>
+<span class="fc" id="L37">    }</span>
+
+    public List&lt;String&gt; getSongsForUser(String userId) {
+<span class="fc" id="L40">        return userWordClouds.getOrDefault(userId, Collections.emptyList());</span>
+    }
+
+    public List&lt;String&gt; getArtistsForUser(String userId) {
+<span class="fc" id="L44">        return artistWordClouds.getOrDefault(userId, Collections.emptyList());</span>
+    }
+    public List&lt;WordFrequency&gt; generateWordCloud(String artist, int songCount, String username) throws Exception {
+        //SpotifyRequest spotReq = new SpotifyRequest();
+<span class="fc" id="L48">        List&lt;String&gt; songs = spotReq.getNumPopularSongs(artist, songCount);</span>
+<span class="fc" id="L49">        List&lt;String&gt; artists = new ArrayList&lt;&gt;(Collections.nCopies(songs.size(), artist));</span>
+<span class="fc" id="L50">        setSongsForUser(username, songs);</span>
+<span class="fc" id="L51">        setArtistsForUser(username, artists);</span>
+<span class="fc" id="L52">        String lyricsForAllSongs = &quot;&quot;;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (String song : songs) {</span>
+            try {
+<span class="fc" id="L55">                String lyrics = getLyricsFromTitleArtist(song, artist);</span>
+<span class="fc" id="L56">                lyricsForAllSongs += lyrics;</span>
+<span class="fc" id="L57">                lyricsForAllSongs += &quot;\n&quot;;</span>
+<span class="fc" id="L58">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L60">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L61">                e.printStackTrace();</span>
+<span class="fc" id="L62">            }</span>
+<span class="fc" id="L63">        }</span>
+
+<span class="fc" id="L65">        List&lt;String&gt; processedLyrics  = processLyrics(lyricsForAllSongs);</span>
+<span class="fc" id="L66">        System.out.println(processedLyrics);</span>
+
+<span class="fc" id="L68">        List&lt;WordFrequency&gt; top100 = getTop100WordFrequencies(processedLyrics);</span>
+
+
+<span class="fc" id="L71">        return top100;</span>
+
+    }
+
+    public List&lt;WordFrequency&gt; generateWordCloudNoNumber(String artist, String username) throws Exception {
+        //SpotifyRequest spotReq = new SpotifyRequest();
+<span class="fc" id="L77">        List&lt;String&gt; songs = spotReq.getAllSongsForArtist(artist);</span>
+<span class="fc" id="L78">        List&lt;String&gt; artists = new ArrayList&lt;&gt;(Collections.nCopies(songs.size(), artist));</span>
+<span class="fc" id="L79">        setSongsForUser(username, songs);</span>
+<span class="fc" id="L80">        setArtistsForUser(username, artists);</span>
+
+<span class="fc" id="L82">        String lyricsForAllSongs = &quot;&quot;;</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        for (String song : songs) {</span>
+            try {
+<span class="fc" id="L85">                String lyrics = getLyricsFromTitleArtist(song, artist);</span>
+<span class="fc" id="L86">                lyricsForAllSongs += lyrics;</span>
+<span class="fc" id="L87">                lyricsForAllSongs += &quot;\n&quot;;</span>
+<span class="fc" id="L88">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L90">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L91">                e.printStackTrace();</span>
+<span class="fc" id="L92">            }</span>
+
+<span class="fc" id="L94">        }</span>
+
+<span class="fc" id="L96">        List&lt;String&gt; processedLyrics  = processLyrics(lyricsForAllSongs);</span>
+
+<span class="fc" id="L98">        List&lt;WordFrequency&gt; top100 = getTop100WordFrequencies(processedLyrics);</span>
+
+<span class="fc" id="L100">        return top100;</span>
+
+    }
+
+    public List&lt;SongFrequency&gt; getSongFrequencyInLyricsNoCount(String word, String artist, int songCount, String username) throws Exception {
+        //SpotifyRequest spotReq = new SpotifyRequest();
+<span class="fc" id="L106">        List&lt;String&gt; songs = getSongsForUser(username);</span>
+<span class="fc" id="L107">        List&lt;String&gt; artists = getArtistsForUser(username);</span>
+<span class="fc" id="L108">        List&lt;SongFrequency&gt; songFrequencies = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L110">        int i = 0;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        for (String song : songs) {</span>
+            try {
+<span class="fc" id="L113">                String lyrics = getLyricsFromTitleArtist(song, artists.get(i));</span>
+<span class="fc" id="L114">                List&lt;String&gt; processedLyrics = processLyrics(lyrics);</span>
+<span class="fc" id="L115">                int count = getWordCountInSongLyrics(processedLyrics, word);</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                if (count &gt; 0) {</span>
+<span class="fc" id="L117">                    songFrequencies.add(new SongFrequency(song, count));</span>
+                }
+<span class="fc" id="L119">            } catch(Exception e) {</span>
+<span class="fc" id="L120">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L121">                e.printStackTrace();</span>
+<span class="fc" id="L122">            }</span>
+
+<span class="fc" id="L124">            i += 1;</span>
+<span class="fc" id="L125">        };</span>
+
+<span class="fc" id="L127">        return songFrequencies;</span>
+
+    }
+
+    public List&lt;SongFrequency&gt; getSongFrequencyInLyrics(String word, String artist, int songCount, String username) throws Exception {
+        //SpotifyRequest spotReq = new SpotifyRequest();
+<span class="fc" id="L133">        List&lt;String&gt; songs2 = getSongsForUser(username);</span>
+<span class="fc" id="L134">        List&lt;String&gt; artists2 = getArtistsForUser(username);</span>
+<span class="fc" id="L135">        List&lt;SongFrequency&gt; songFrequencies2 = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L137">        int j = 0;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (String song2 : songs2) {</span>
+            try {
+<span class="fc" id="L140">                String lyrics2 = getLyricsFromTitleArtist(song2, artists2.get(j));</span>
+<span class="fc" id="L141">                List&lt;String&gt; processedLyrics2 = processLyrics(lyrics2);</span>
+<span class="fc" id="L142">                int num = getWordCountInSongLyrics(processedLyrics2, word);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                if (num &gt; 0) {</span>
+<span class="fc" id="L144">                    songFrequencies2.add(new SongFrequency(song2, num));</span>
+                }
+<span class="fc" id="L146">            } catch(Exception e) {</span>
+<span class="fc" id="L147">                System.err.println(&quot;Failed to retrieve lyrics for the song: &quot; + song2);</span>
+<span class="fc" id="L148">                e.printStackTrace();</span>
+<span class="fc" id="L149">            }</span>
+<span class="fc" id="L150">            j += 1;</span>
+<span class="fc" id="L151">        };</span>
+
+<span class="fc" id="L153">        return songFrequencies2;</span>
+
+    }
+
+    public int getWordCountInSongLyrics(List&lt;String&gt; songLyrics, String word) {
+<span class="fc" id="L158">        int countForWord = 0;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (String songWord : songLyrics) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (songWord.equals(word)) {</span>
+<span class="fc" id="L161">                countForWord += 1;</span>
+            }
+<span class="fc" id="L163">        }</span>
+<span class="fc" id="L164">        return countForWord;</span>
+    }
+
+    public Song getSongDetails(String songName, String artist, String username) throws Exception {
+        //SpotifyRequest spotReq = new SpotifyRequest();
+<span class="fc" id="L169">        System.out.println(username);</span>
+<span class="fc" id="L170">        List&lt;String&gt; s = getSongsForUser(username);</span>
+<span class="fc" id="L171">        List&lt;String&gt; a = getArtistsForUser(username);</span>
+<span class="fc" id="L172">        int index = getSongsForUser(username).indexOf(songName);</span>
+<span class="fc" id="L173">        String artistName = getArtistsForUser(username).get(index);</span>
+<span class="fc" id="L174">        String releaseData = spotReq.getReleaseDateForSong(songName, artistName);</span>
+<span class="fc" id="L175">        String lyrics = getLyricsFromTitleArtist(songName, artistName);</span>
+<span class="fc" id="L176">        return new Song(songName, artistName, releaseData, lyrics);</span>
+    }
+
+    public List&lt;Artist&gt; getAmbiguousArtists(String artistName) throws Exception {
+<span class="fc" id="L180">        List&lt;Item&gt; items = spotReq.getPossibleArtists(artistName);</span>
+<span class="fc" id="L181">        List&lt;Artist&gt; artists = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        for (Item item : items) {</span>
+<span class="fc" id="L183">            artists.add(new Artist(item.getName(), item.getImages().get(0).getURL()));</span>
+<span class="fc" id="L184">        }</span>
+<span class="fc" id="L185">        return artists;</span>
+    }
+
+    public List&lt;String&gt; getSongsForArtist(String artistName) throws Exception {
+<span class="fc" id="L189">        List&lt;String&gt; songs = spotReq.getAllSongsForArtist(artistName);</span>
+<span class="fc" id="L190">        return songs;</span>
+    }
+
+    public List&lt;WordFrequency&gt; generateWordCloudFromSongList(String artist, List&lt;String&gt; songs, String username) throws Exception {
+        //SpotifyRequest spotReq = new SpotifyRequest();
+<span class="fc" id="L195">        String lyricsForAllSongs = &quot;&quot;;</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        for (String song : songs) {</span>
+            try {
+<span class="fc" id="L198">                String lyrics = getLyricsFromTitleArtist(song, artist);</span>
+<span class="fc" id="L199">                lyricsForAllSongs += lyrics;</span>
+<span class="fc" id="L200">                lyricsForAllSongs += &quot;\n&quot;;</span>
+<span class="fc" id="L201">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L203">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L204">                e.printStackTrace();</span>
+<span class="fc" id="L205">            }</span>
+
+<span class="fc" id="L207">        }</span>
+
+<span class="fc" id="L209">        setSongsForUser(username, songs);</span>
+<span class="fc" id="L210">        List&lt;String&gt; artists = new ArrayList&lt;&gt;(Collections.nCopies(songs.size(), artist));</span>
+<span class="fc" id="L211">        setArtistsForUser(username, artists);</span>
+
+<span class="fc" id="L213">        List&lt;String&gt; processedLyrics  = processLyrics(lyricsForAllSongs);</span>
+
+<span class="fc" id="L215">        List&lt;WordFrequency&gt; top100 = getTop100WordFrequencies(processedLyrics);</span>
+
+<span class="fc" id="L217">        return top100;</span>
+    }
+
+    public List&lt;WordFrequency&gt; updateWordCloudFromSongList(String artist, List&lt;String&gt; songs, String username, String wordCloudJson) throws Exception {
+        //List&lt;WordFrequency&gt; existingWordCloud = WordCloudParser.parseWordFrequencies(wordCloudJson);
+<span class="fc" id="L222">        List&lt;String&gt; existingSongs = getSongsForUser(username);</span>
+<span class="fc" id="L223">        List&lt;String&gt; existingArtists = getArtistsForUser(username);</span>
+
+<span class="fc" id="L225">        Map&lt;String, Integer&gt; frequencyMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L226">        Map&lt;String, Set&lt;String&gt;&gt; wordToSongsMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L227">        Map&lt;String, String&gt; songToArtistMap = new HashMap&lt;&gt;();</span>
+
+
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        for (int i = 0; i &lt; existingSongs.size(); i++) {</span>
+<span class="fc" id="L231">            String existingSong = existingSongs.get(i);</span>
+<span class="fc" id="L232">            String existingArtist = existingArtists.get(i);</span>
+<span class="fc" id="L233">            songToArtistMap.put(existingSong, existingArtist);</span>
+
+            try {
+<span class="fc" id="L236">                String lyrics = getLyricsFromTitleArtist(existingSong, existingArtist);</span>
+<span class="fc" id="L237">                List&lt;String&gt; processedLyrics = processLyrics(lyrics);</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">                for (String word: processedLyrics) {</span>
+<span class="fc" id="L239">                    frequencyMap.put(word, frequencyMap.getOrDefault(word, 0) + 1);</span>
+<span class="fc" id="L240">                    wordToSongsMap.computeIfAbsent(word, k -&gt; new HashSet&lt;&gt;()).add(existingSong);</span>
+<span class="fc" id="L241">                }</span>
+
+<span class="fc" id="L243">            } catch (Exception e) {</span>
+<span class="fc" id="L244">                System.err.println(&quot;Error retrieving lyrics for existing song: &quot; + existingSong);</span>
+<span class="fc" id="L245">                e.printStackTrace();</span>
+<span class="fc" id="L246">            }</span>
+        }
+
+        // Process New Songs
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (String song : songs) {</span>
+<span class="fc" id="L251">            songToArtistMap.put(song, artist);</span>
+            try {
+<span class="fc" id="L253">                String lyrics = getLyricsFromTitleArtist(song, artist);</span>
+
+<span class="fc" id="L255">                List&lt;String&gt; processedLyrics = processLyrics(lyrics);</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">                for (String word: processedLyrics) {</span>
+<span class="fc" id="L257">                    frequencyMap.put(word, frequencyMap.getOrDefault(word, 0) + 1);</span>
+<span class="fc" id="L258">                    wordToSongsMap.computeIfAbsent(word, k -&gt; new HashSet&lt;&gt;()).add(song);</span>
+<span class="fc" id="L259">                }</span>
+
+<span class="fc" id="L261">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L263">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L264">                e.printStackTrace();</span>
+<span class="fc" id="L265">            }</span>
+
+<span class="fc" id="L267">        }</span>
+
+
+<span class="fc" id="L270">        List&lt;WordFrequency&gt; top100 = frequencyMap.entrySet().stream()</span>
+<span class="fc" id="L271">                .sorted((a, b) -&gt; Integer.compare(b.getValue(), a.getValue())) // descending</span>
+<span class="fc" id="L272">                .limit(100)</span>
+<span class="fc" id="L273">                .map(entry -&gt; new WordFrequency(entry.getKey(), entry.getValue()))</span>
+<span class="fc" id="L274">                .collect(Collectors.toList());</span>
+
+
+<span class="fc" id="L277">        List&lt;String&gt; finalSongsUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L278">        Set&lt;String&gt; songSeen = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L280" title="All 2 branches covered.">        for (WordFrequency wordFreq : top100) {</span>
+<span class="fc" id="L281">            Set&lt;String&gt; songsForWord = wordToSongsMap.get(wordFreq.getWord());</span>
+
+<span class="fc bfc" id="L283" title="All 2 branches covered.">            for (String song : songsForWord) {</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">                if (!songSeen.contains(song)) {</span>
+<span class="fc" id="L285">                    finalSongsUsed.add(song);</span>
+<span class="fc" id="L286">                    songSeen.add(song);</span>
+                }
+<span class="fc" id="L288">            }</span>
+
+<span class="fc" id="L290">        }</span>
+
+<span class="fc" id="L292">        setSongsForUser(username, finalSongsUsed);</span>
+
+
+<span class="fc" id="L295">        List&lt;String&gt; finalArtistsUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        for (String song : finalSongsUsed) {</span>
+<span class="fc" id="L297">            finalArtistsUsed.add(songToArtistMap.get(song));</span>
+<span class="fc" id="L298">        }</span>
+<span class="fc" id="L299">        setArtistsForUser(username, finalArtistsUsed);</span>
+
+<span class="fc bfc" id="L301" title="All 2 branches covered.">        for (String song: finalSongsUsed) {</span>
+<span class="fc" id="L302">            System.out.println(&quot;MATCHA: &quot;+song);</span>
+<span class="fc" id="L303">        }</span>
+
+
+<span class="fc" id="L306">        return top100;</span>
+
+
+
+    }
+
+    public List&lt;WordFrequency&gt; updateWordCloudFromSongListWithSongCount (String artist, int songCount, String username, String wordCloudJson) throws Exception {
+<span class="fc" id="L313">        List&lt;String&gt; existingSongs = getSongsForUser(username);</span>
+<span class="fc" id="L314">        List&lt;String&gt; existingArtists = getArtistsForUser(username);</span>
+
+<span class="fc" id="L316">        Map&lt;String, Integer&gt; frequencyMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L317">        Map&lt;String, Set&lt;String&gt;&gt; wordToSongsMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L318">        Map&lt;String, String&gt; songToArtistMap = new HashMap&lt;&gt;();</span>
+
+
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        for (int i = 0; i &lt; existingSongs.size(); i++) {</span>
+<span class="fc" id="L322">            String existingSong = existingSongs.get(i);</span>
+<span class="fc" id="L323">            String existingArtist = existingArtists.get(i);</span>
+<span class="fc" id="L324">            songToArtistMap.put(existingSong, existingArtist);</span>
+
+            try {
+<span class="fc" id="L327">                String lyrics = getLyricsFromTitleArtist(existingSong, existingArtist);</span>
+<span class="fc" id="L328">                List&lt;String&gt; processedLyrics = processLyrics(lyrics);</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">                for (String word: processedLyrics) {</span>
+<span class="fc" id="L330">                    frequencyMap.put(word, frequencyMap.getOrDefault(word, 0) + 1);</span>
+<span class="fc" id="L331">                    wordToSongsMap.computeIfAbsent(word, k -&gt; new HashSet&lt;&gt;()).add(existingSong);</span>
+<span class="fc" id="L332">                }</span>
+
+<span class="fc" id="L334">            } catch (Exception e) {</span>
+<span class="fc" id="L335">                System.err.println(&quot;Error retrieving lyrics for existing song: &quot; + existingSong);</span>
+<span class="fc" id="L336">                e.printStackTrace();</span>
+<span class="fc" id="L337">            }</span>
+        }
+
+
+        // Process New Songs
+<span class="fc" id="L342">        List&lt;String&gt; songs = spotReq.getNumPopularSongs(artist, songCount);</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">        for (String song : songs) {</span>
+<span class="fc" id="L344">            songToArtistMap.put(song, artist);</span>
+            try {
+<span class="fc" id="L346">                String lyrics = getLyricsFromTitleArtist(song, artist);</span>
+
+<span class="fc" id="L348">                List&lt;String&gt; processedLyrics = processLyrics(lyrics);</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                for (String word: processedLyrics) {</span>
+<span class="fc" id="L350">                    frequencyMap.put(word, frequencyMap.getOrDefault(word, 0) + 1);</span>
+<span class="fc" id="L351">                    wordToSongsMap.computeIfAbsent(word, k -&gt; new HashSet&lt;&gt;()).add(song);</span>
+<span class="fc" id="L352">                }</span>
+
+<span class="fc" id="L354">            } catch (Exception e) {</span>
+                // Log the error and continue
+<span class="fc" id="L356">                System.err.println(&quot;Error retrieving lyrics for song: &quot; + song);</span>
+<span class="fc" id="L357">                e.printStackTrace();</span>
+<span class="fc" id="L358">            }</span>
+
+<span class="fc" id="L360">        }</span>
+
+
+<span class="fc" id="L363">        List&lt;WordFrequency&gt; top100 = frequencyMap.entrySet().stream()</span>
+<span class="fc" id="L364">                .sorted((a, b) -&gt; Integer.compare(b.getValue(), a.getValue())) // descending</span>
+<span class="fc" id="L365">                .limit(100)</span>
+<span class="fc" id="L366">                .map(entry -&gt; new WordFrequency(entry.getKey(), entry.getValue()))</span>
+<span class="fc" id="L367">                .collect(Collectors.toList());</span>
+
+
+<span class="fc" id="L370">        List&lt;String&gt; finalSongsUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L371">        Set&lt;String&gt; songSeen = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L373" title="All 2 branches covered.">        for (WordFrequency wordFreq : top100) {</span>
+<span class="fc" id="L374">            Set&lt;String&gt; songsForWord = wordToSongsMap.get(wordFreq.getWord());</span>
+<span class="fc bfc" id="L375" title="All 2 branches covered.">            for (String song : songsForWord) {</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">                if (!songSeen.contains(song)) {</span>
+<span class="fc" id="L377">                    finalSongsUsed.add(song);</span>
+<span class="fc" id="L378">                    songSeen.add(song);</span>
+                }
+<span class="fc" id="L380">            }</span>
+<span class="fc" id="L381">        }</span>
+
+<span class="fc" id="L383">        setSongsForUser(username, finalSongsUsed);</span>
+
+
+<span class="fc" id="L386">        List&lt;String&gt; finalArtistsUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">        for (String song : finalSongsUsed) {</span>
+<span class="fc" id="L388">            finalArtistsUsed.add(songToArtistMap.get(song));</span>
+<span class="fc" id="L389">        }</span>
+<span class="fc" id="L390">        setArtistsForUser(username, finalArtistsUsed);</span>
+
+<span class="fc bfc" id="L392" title="All 2 branches covered.">        for (String song: finalSongsUsed) {</span>
+<span class="fc" id="L393">            System.out.println(&quot;MATCHA: &quot;+song);</span>
+<span class="fc" id="L394">        }</span>
+
+
+<span class="fc" id="L397">        return top100;</span>
+
+
+
+    }
+
+    public Song getSongDetailsFavorites(String songName, String artist) throws Exception {
+<span class="fc" id="L404">        String releaseData = spotReq.getReleaseDateForSong(songName, artist);</span>
+<span class="fc" id="L405">        String lyrics = getLyricsFromTitleArtist(songName, artist);</span>
+<span class="fc" id="L406">        return new Song(songName, artist, releaseData, lyrics);</span>
+    }
+
+//    public static void main(String[] args) throws Exception{
+//        SpotifyRequest spotifyRequest = new SpotifyRequest();
+//        WordCloudService wordCloudService = new WordCloudService(spotifyRequest);
+//        List&lt;WordFrequency&gt; top100 = wordCloudService.generateWordCloud(&quot;Taylor Swift&quot;, 1);
+//        System.out.println(top100.size());
+//        for(WordFrequency wf : top100){
+//        System.out.println(wf.getWord() + &quot; &quot; + wf.getCount());
+//        }
+//
+//        List&lt;SongFrequency&gt; songFrequencies = wordCloudService.getSongFrequencyInLyrics(&quot;risk&quot;, &quot;Gracie Abrams&quot;, 10);
+//        for(SongFrequency sf : songFrequencies){
+//        System.out.println(&quot;Output: &quot; + sf.getSong() + &quot; &quot; + sf.getCount());
+//        }
+//        System.out.println(songFrequencies);
+//
+//        Song song = wordCloudService.getSongDetails(&quot;Cruel Summer&quot;, &quot;Taylor Swift&quot;);
+//        System.out.println(song.getTitle() + &quot; &quot; + song.getArtist() + &quot; &quot; + song.getYear());
+//        System.out.println(song.getLyrics());
+//        List&lt;WordFrequency&gt; top100 = wordCloudService.generateWordCloudNoNumber(&quot;Taylor Swift&quot;);
+//        for (WordFrequency wf : top100){
+//        System.out.println(wf.getWord() + &quot; &quot; + wf.getCount());
+//        }
+//        List&lt;Artist&gt; artists = wordCloudService.getAmbiguousArtists(&quot;Justin&quot;);
+//        for(Artist artist : artists) {
+//            System.out.println(artist.getName());
+//        }
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

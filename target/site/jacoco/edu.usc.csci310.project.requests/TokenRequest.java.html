@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TokenRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.requests</a> &gt; <span class="el_source">TokenRequest.java</span></div><h1>TokenRequest.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.requests;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
+
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Base64;
+import java.util.Properties;
+
+public class TokenRequest {
+//    private static String CLIENT_ID = &quot;&quot;;
+//    private static String CLIENT_SECRET = &quot;&quot;;
+    private static HttpClient client;
+
+<span class="fc" id="L20">    public TokenRequest(HttpClient client) {</span>
+<span class="fc" id="L21">        this.client = client;</span>
+<span class="fc" id="L22">    }</span>
+
+<span class="fc" id="L24">    public TokenRequest() {</span>
+<span class="fc" id="L25">        this.client = HttpClient.newHttpClient();</span>
+<span class="fc" id="L26">    }</span>
+
+    public static String getAccessToken() throws Exception {
+<span class="fc" id="L29">        Properties properties = new Properties();</span>
+<span class="fc" id="L30">        try(InputStream inputStream = TokenRequest.class.getClassLoader().getResourceAsStream(&quot;application.properties&quot;)) {</span>
+<span class="fc" id="L31">            properties.load(inputStream);</span>
+<span class="fc" id="L32">            String CLIENT_ID = properties.getProperty(&quot;client_id&quot;);</span>
+<span class="fc" id="L33">            String CLIENT_SECRET = properties.getProperty(&quot;client_secret&quot;);</span>
+<span class="fc" id="L34">            System.out.println(CLIENT_ID + &quot; : &quot; + CLIENT_SECRET);</span>
+
+<span class="fc" id="L36">            String tokenURL = &quot;https://accounts.spotify.com/api/token&quot;;</span>
+
+<span class="fc" id="L38">            String requestBody = &quot;grant_type=client_credentials&quot;;</span>
+<span class="fc" id="L39">            HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L40">                    .uri(URI.create(tokenURL))</span>
+<span class="fc" id="L41">                    .header(&quot;Authorization&quot;, &quot;Basic &quot; + Base64.getEncoder().encodeToString((CLIENT_ID + &quot;:&quot; + CLIENT_SECRET).getBytes()))</span>
+<span class="fc" id="L42">                    .header(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;)</span>
+<span class="fc" id="L43">                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))</span>
+<span class="fc" id="L44">                    .build();</span>
+
+<span class="fc" id="L46">            HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (response.statusCode() != HttpStatus.OK.value()) {</span>
+<span class="fc" id="L49">                throw new Exception(&quot;Bad response&quot;);</span>
+            }
+
+<span class="fc" id="L52">            ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L53">            JsonNode rootNode = mapper.readTree(response.body());</span>
+<span class="fc" id="L54">            String accessToken = rootNode.get(&quot;access_token&quot;).asText();</span>
+<span class="fc" id="L55">            return accessToken;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

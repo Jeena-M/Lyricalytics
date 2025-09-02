@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpotifyRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">310 Project</a> &gt; <a href="index.source.html" class="el_package">edu.usc.csci310.project.requests</a> &gt; <span class="el_source">SpotifyRequest.java</span></div><h1>SpotifyRequest.java</h1><pre class="source lang-java linenums">package edu.usc.csci310.project.requests;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.usc.csci310.project.responses.ArtistsResponse;
+import edu.usc.csci310.project.responses.Item;
+import edu.usc.csci310.project.responses.ManyTracksResponse;
+import edu.usc.csci310.project.responses.Track;
+import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import static edu.usc.csci310.project.requests.TokenRequest.getAccessToken;
+
+@Component
+public class SpotifyRequest {
+    private static HttpClient client;
+    private static TokenRequest tokenRequest;
+
+<span class="fc" id="L26">    public SpotifyRequest(HttpClient client) {</span>
+<span class="fc" id="L27">        this.client = client;</span>
+<span class="fc" id="L28">        this.tokenRequest = new TokenRequest();</span>
+<span class="fc" id="L29">    }</span>
+
+<span class="fc" id="L31">    public SpotifyRequest() {</span>
+<span class="fc" id="L32">        this.client = HttpClient.newHttpClient();</span>
+<span class="fc" id="L33">        this.tokenRequest = new TokenRequest();</span>
+<span class="fc" id="L34">    }</span>
+
+    public List&lt;Item&gt; getPossibleArtists(String name) throws Exception {
+<span class="fc" id="L37">        String urlName = URLEncoder.encode(name, StandardCharsets.UTF_8)</span>
+<span class="fc" id="L38">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L39">        HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L40">                .uri(URI.create(&quot;https://api.spotify.com/v1/search?q=&quot;+urlName+&quot;&amp;type=artist&amp;limit=20&quot;))</span>
+<span class="fc" id="L41">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + getAccessToken())</span>
+<span class="fc" id="L42">                .GET()</span>
+<span class="fc" id="L43">                .build();</span>
+<span class="fc" id="L44">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="fc" id="L45">        System.out.println(&quot;Status Code: &quot; + response.statusCode());</span>
+//        System.out.println(response.body());
+<span class="fc" id="L47">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L48">        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L49">        ArtistsResponse artistsResponse = mapper.readValue(response.body(), ArtistsResponse.class);</span>
+
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if(artistsResponse.getArtists().getItems().isEmpty()) {</span>
+<span class="fc" id="L52">            throw new Exception(&quot;No matching artist found&quot;);</span>
+        }
+
+<span class="fc" id="L55">        boolean relevantResults = false;</span>
+<span class="fc" id="L56">        List&lt;Item&gt; artists = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for(Item item : artistsResponse.getArtists().getItems()) {</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            if(item.getName().toLowerCase().equals(name.toLowerCase())){</span>
+<span class="fc" id="L59">                artists.add(item);</span>
+<span class="fc" id="L60">                System.out.println(artists.get(0).getName());</span>
+<span class="fc" id="L61">                return artists;</span>
+            }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            if(item.getName().toLowerCase().contains(name.toLowerCase())){</span>
+<span class="fc" id="L64">                relevantResults = true;</span>
+<span class="fc" id="L65">                artists.add(item);</span>
+            }
+<span class="fc" id="L67">        }</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if(!relevantResults) {</span>
+<span class="fc" id="L69">            throw new Exception(&quot;No matching artist found&quot;);</span>
+        }
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for(Item item : artists) {</span>
+<span class="fc" id="L72">            System.out.println(item.getName());</span>
+<span class="fc" id="L73">        }</span>
+<span class="fc" id="L74">        return artists;</span>
+    }
+
+    public List&lt;String&gt; getNumPopularSongs(String name, int num) throws Exception {
+<span class="fc" id="L78">        List&lt;Item&gt; artists = getPossibleArtists(name);</span>
+        //check if found the one specific artist (don't need popup)
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if(artists.size() != 1){</span>
+<span class="fc" id="L81">            throw new Exception(&quot;Found many artists&quot;);</span>
+        }
+<span class="fc" id="L83">        String urlName = URLEncoder.encode(artists.get(0).getName(), StandardCharsets.UTF_8)</span>
+<span class="fc" id="L84">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L85">        HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L86">                .uri(URI.create(&quot;https://api.spotify.com/v1/search?q=&quot;+urlName+&quot;&amp;type=track&amp;limit=50&quot;))</span>
+<span class="fc" id="L87">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + getAccessToken())</span>
+<span class="fc" id="L88">                .GET()</span>
+<span class="fc" id="L89">                .build();</span>
+<span class="fc" id="L90">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="fc" id="L91">        System.out.println(&quot;Status Code: &quot; + response.statusCode());</span>
+//        System.out.println(response.body());
+<span class="fc" id="L93">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L94">        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L95">        ManyTracksResponse manyTracksResponse = mapper.readValue(response.body(), ManyTracksResponse.class);</span>
+<span class="fc" id="L96">        List&lt;Track&gt; returnedTracks = manyTracksResponse.getTracks().getItems();</span>
+
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if(returnedTracks.isEmpty()) {</span>
+            //no songs found error
+<span class="fc" id="L100">            throw new Exception(&quot;No songs found&quot;);</span>
+        }
+
+        //sort tracks by popularity (descending)
+<span class="fc" id="L104">        returnedTracks.sort(Comparator.comparingInt(Track::getPopularity).reversed());</span>
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if(num &gt; 50){</span>
+<span class="fc" id="L107">            System.out.println(&quot;Error, can get at most 50 tracks&quot;);</span>
+<span class="fc" id="L108">            num = 50;</span>
+        }
+
+<span class="fc" id="L111">        List&lt;String&gt; songs = new ArrayList&lt;String&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for(int i = 0; i &lt; num; i++){</span>
+<span class="fc" id="L113">            songs.add(returnedTracks.get(i).getName());</span>
+<span class="fc" id="L114">            System.out.println(returnedTracks.get(i).getName());</span>
+        }
+
+<span class="fc" id="L117">        return songs;</span>
+    }
+
+    //will return 50 songs by this artist
+    public List&lt;String&gt; getAllSongsForArtist(String name) throws Exception {
+<span class="fc" id="L122">        List&lt;Item&gt; artists = getPossibleArtists(name);</span>
+        //check if found the one specific artist (don't need popup)
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if(artists.size() != 1){</span>
+<span class="fc" id="L125">            throw new Exception(&quot;Found many artists&quot;);</span>
+        }
+<span class="fc" id="L127">        String urlName = URLEncoder.encode(artists.get(0).getName(), StandardCharsets.UTF_8)</span>
+<span class="fc" id="L128">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L129">        HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L130">                .uri(URI.create(&quot;https://api.spotify.com/v1/search?q=&quot;+urlName+&quot;&amp;type=track&amp;limit=50&quot;))</span>
+<span class="fc" id="L131">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + getAccessToken())</span>
+<span class="fc" id="L132">                .GET()</span>
+<span class="fc" id="L133">                .build();</span>
+<span class="fc" id="L134">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="fc" id="L135">        System.out.println(&quot;Status Code: &quot; + response.statusCode());</span>
+//        System.out.println(response.body());
+<span class="fc" id="L137">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L138">        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L139">        ManyTracksResponse manyTracksResponse = mapper.readValue(response.body(), ManyTracksResponse.class);</span>
+
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if(manyTracksResponse.getTracks().getItems().isEmpty()) {</span>
+            //no songs found error
+<span class="fc" id="L143">            throw new Exception(&quot;No songs found&quot;);</span>
+        }
+
+<span class="fc" id="L146">        Set&lt;String&gt; uniqueSongs = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L147">        List&lt;String&gt; songs = new ArrayList&lt;String&gt;();</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        for(Track track : manyTracksResponse.getTracks().getItems()){</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            if(!uniqueSongs.contains(track.getName())){</span>
+<span class="fc" id="L150">                uniqueSongs.add(track.getName());</span>
+<span class="fc" id="L151">                songs.add(track.getName());</span>
+<span class="fc" id="L152">                System.out.println(track.getName());</span>
+            }
+<span class="fc" id="L154">        }</span>
+
+<span class="fc" id="L156">        return songs;</span>
+    }
+
+    //returns release date for a given song and artist
+    public String getReleaseDateForSong(String song, String artist) throws Exception {
+<span class="fc" id="L161">        String urlSong = URLEncoder.encode(song, StandardCharsets.UTF_8)</span>
+<span class="fc" id="L162">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L163">        String urlArtist = URLEncoder.encode(artist, StandardCharsets.UTF_8)</span>
+<span class="fc" id="L164">                .replace(&quot;+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L165">        HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L166">                .uri(URI.create(&quot;https://api.spotify.com/v1/search?q=&quot;+urlSong+&quot;+&quot;+urlArtist+&quot;&amp;type=track&amp;limit=1&quot;))</span>
+<span class="fc" id="L167">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + getAccessToken())</span>
+<span class="fc" id="L168">                .GET()</span>
+<span class="fc" id="L169">                .build();</span>
+<span class="fc" id="L170">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="fc" id="L171">        System.out.println(&quot;Status Code: &quot; + response.statusCode());</span>
+<span class="fc" id="L172">        System.out.println(response.body());</span>
+<span class="fc" id="L173">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L174">        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L175">        ManyTracksResponse manyTracksResponse = mapper.readValue(response.body(), ManyTracksResponse.class);</span>
+
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        if(manyTracksResponse.getTracks().getItems().isEmpty()) {</span>
+            //no songs found error
+<span class="fc" id="L179">            throw new Exception(&quot;No songs found&quot;);</span>
+        }
+
+<span class="fc" id="L182">        System.out.println(manyTracksResponse.getTracks().getItems().get(0).getAlbum().getName());</span>
+<span class="fc" id="L183">        String date = manyTracksResponse.getTracks().getItems().get(0).getAlbum().getRelease_date();</span>
+<span class="fc" id="L184">        date = date.substring(0, 4);</span>
+<span class="fc" id="L185">        System.out.println(date);</span>
+
+<span class="fc" id="L187">        return date;</span>
+    }
+
+    //main for testing
+//    public static void main(String[] args) throws Exception {
+//    SpotifyRequest request = new SpotifyRequest();
+//    request.getPossibleArtists(&quot;Taylor&quot;);
+//        getPossibleArtists(&quot;Justin&quot;);
+//    request.getNumPopularSongs(&quot;Taylor Swift&quot;, 51);
+//    request.getAllSongsForArtist(&quot;Taylor Swift&quot;);
+//        request.getReleaseDateForSong(&quot;July&quot;, &quot;Hozier&quot;);
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
